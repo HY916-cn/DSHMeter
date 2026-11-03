@@ -60,7 +60,8 @@ struct BalancePopover: View {
         HStack {
             VStack(alignment: .leading, spacing: 3) {
                 Text("DSHMeter").font(.headline)
-                Text("DeepSeek API").font(.caption).foregroundStyle(.secondary)
+                Text(service.source == .signedInAccount ? L10n.string("account.deepseek") : "DeepSeek API")
+                    .font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
             if service.isRefreshing { ProgressView().controlSize(.small) }
@@ -84,7 +85,9 @@ struct BalancePopover: View {
             Divider()
             if let error = service.error { errorView(error) }
             if let balance = service.selectedBalance, let snapshot = service.snapshot {
-                BalanceWindowRow(balance: balance, isAvailable: snapshot.isAvailable)
+                BalanceWindowRow(balance: balance,
+                                 isAvailable: service.source == .signedInAccount
+                                     ? balance.totalBalance > 0 : snapshot.isAvailable)
                 if snapshot.balanceInfos.count > 1 {
                     Picker(L10n.string("balance.currency"), selection: $settings.preferredCurrency) {
                         ForEach(snapshot.balanceInfos, id: \.currency.rawValue) { item in
@@ -354,7 +357,8 @@ extension DSHMeterError {
         case .credentialUnreadable: key = "error.credential_unreadable"
         case .credentialPermissions: key = "error.credential_permissions"
         case .credentialTooLarge, .credentialMalformed: key = "error.credential_malformed"
-        case .invalidCredential, .unauthorized: key = "error.unauthorized"
+        case .invalidCredential: key = "error.credential_malformed"
+        case .unauthorized: key = "error.unauthorized"
         case .rateLimited: key = "error.rate_limited"
         case .serverError: key = "error.server"
         case .httpError, .invalidResponse: key = "error.response"

@@ -50,19 +50,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "A native macOS menu bar monitor for the DeepSeek API balance used by DSH. Community project."
+            "value": "A native macOS menu bar monitor for the balance of the DeepSeek account used in DSH. Community project."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "原生 macOS 菜单栏工具，查看 DSH 所用 DeepSeek API 的账户余额。社区项目。"
+            "value": "原生 macOS 菜单栏工具，查看 DSH 所用 DeepSeek 账号的余额。社区项目。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "原生 macOS 選單列工具，查看 DSH 所用 DeepSeek API 的帳戶餘額。社群專案。"
+            "value": "原生 macOS 選單列工具，查看 DSH 所用 DeepSeek 帳戶的餘額。社群專案。"
           }
         }
       }
@@ -116,19 +116,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The DSH folder used to read the saved DeepSeek API Key."
+            "value": "The DSH folder containing the signed-in account and optional API Key."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "用于读取已保存 DeepSeek API Key 的 DSH 目录。"
+            "value": "保存登录账号及可选 API Key 的 DSH 目录。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "用於讀取已儲存 DeepSeek API Key 的 DSH 目錄。"
+            "value": "儲存登入帳戶及選用 API Key 的 DSH 目錄。"
           }
         }
       }
@@ -160,19 +160,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reads only the named DeepSeek API Key from DSH credential sources. The key stays in memory and is sent only to api.deepseek.com/user/balance over HTTPS. Balance data stays in memory. No model requests, telemetry, or conversation access."
+            "value": "Reads only the saved DSH account grant or DeepSeek API Key. Credentials stay in memory and are sent only to their matching official DeepSeek balance endpoint over HTTPS. No model requests, telemetry, or conversation access."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "仅读取 DSH 凭据来源中的指定 DeepSeek API Key。密钥仅保留在内存，并通过 HTTPS 发送至 api.deepseek.com/user/balance。余额数据保留在内存，不发起模型请求、不收集遥测、不访问对话。"
+            "value": "仅读取 DSH 保存的账号登录凭据或 DeepSeek API Key。凭据仅保留在内存，通过 HTTPS 发送至各自对应的 DeepSeek 官方余额接口。不发起模型请求、不收集遥测、不访问对话。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "僅讀取 DSH 憑據來源中的指定 DeepSeek API Key。金鑰僅保留於記憶體，並透過 HTTPS 傳送至 api.deepseek.com/user/balance。餘額資料保留於記憶體，不發起模型請求、不收集遙測、不存取對話。"
+            "value": "僅讀取 DSH 儲存的帳戶登入憑據或 DeepSeek API Key。憑據僅保留於記憶體，透過 HTTPS 傳送至各自對應的 DeepSeek 官方餘額介面。不發起模型請求、不收集遙測、不存取對話。"
           }
         }
       }
@@ -195,6 +195,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "版本 %@ · 組建 %@"
+          }
+        }
+      }
+    },
+    "account.deepseek": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DeepSeek account"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DeepSeek 账号"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DeepSeek 帳戶"
           }
         }
       }
@@ -490,19 +512,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "API available"
+            "value": "Balance available"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "API 可用"
+            "value": "余额可用"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "API 可用"
+            "value": "餘額可用"
           }
         }
       }
@@ -600,19 +622,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "API balance"
+            "value": "Account balance"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "API 余额"
+            "value": "账户余额"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "API 餘額"
+            "value": "帳戶餘額"
           }
         }
       }
@@ -666,19 +688,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Balance unavailable for calls"
+            "value": "Insufficient balance"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "余额不足以调用"
+            "value": "余额不足"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "餘額不足以呼叫"
+            "value": "餘額不足"
           }
         }
       }
@@ -732,19 +754,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "DSH credentials could not be parsed. Save the DeepSeek API Key again in DSH, or check the configuration format in README."
+            "value": "The DSH credential format is not supported. Check the DSH folder, or sign in again in DSH."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "DSH 凭据格式无法识别。请在 DSH 中重新保存 DeepSeek API Key，或查看 README 检查配置格式。"
+            "value": "DSH 凭据格式无法识别。请检查 DSH 目录，或在 DSH 中重新登录。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "無法識別 DSH 憑據格式。請在 DSH 中重新儲存 DeepSeek API Key，或查看 README 檢查設定格式。"
+            "value": "無法識別 DSH 憑據格式。請檢查 DSH 目錄，或在 DSH 中重新登入。"
           }
         }
       }
@@ -754,19 +776,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No DeepSeek API Key found in DSH. Open DSH → Settings → Models, save a DeepSeek API Key, then refresh. Signing into DSH alone may not configure an API Key."
+            "value": "No signed-in DeepSeek account or API Key was found. Open DSH and sign in, then refresh."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "DSH 中未找到 DeepSeek API Key。请打开 DSH → 设置 → 模型，保存 DeepSeek API Key 后刷新。仅登录 DSH 账户可能尚未配置 API Key。"
+            "value": "未找到已登录的 DeepSeek 账号或 API Key。请打开 DSH 完成账号登录后刷新。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "DSH 中找不到 DeepSeek API Key。請開啟 DSH → 設定 → 模型，儲存 DeepSeek API Key 後重新整理。僅登入 DSH 帳戶可能尚未設定 API Key。"
+            "value": "找不到已登入的 DeepSeek 帳戶或 API Key。請開啟 DSH 完成帳戶登入後重新整理。"
           }
         }
       }
@@ -996,19 +1018,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "DeepSeek rejected this API Key. Check or replace it in DSH → Settings → Models."
+            "value": "DeepSeek authentication has expired or was rejected. Sign in again in DSH; if using an API Key, check it in DSH model settings."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "DeepSeek 拒绝了此 API Key。请在 DSH → 设置 → 模型中检查或更新密钥。"
+            "value": "DeepSeek 认证已失效或被拒绝。请在 DSH 中重新登录；使用 API Key 时，请在模型设置中检查密钥。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "DeepSeek 拒絕了此 API Key。請在 DSH → 設定 → 模型中檢查或更新金鑰。"
+            "value": "DeepSeek 驗證已失效或遭拒絕。請在 DSH 中重新登入；使用 API Key 時，請在模型設定中檢查金鑰。"
           }
         }
       }
@@ -1282,19 +1304,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Automatically reuses DEEPSEEK_API_KEY saved by DSH. The credential file is read only; the key is sent only to the official DeepSeek balance endpoint."
+            "value": "Automatically uses the DeepSeek account signed into DSH. When signed out, falls back to the saved DeepSeek API Key. Reads DSH credentials without modifying them."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "自动复用 DSH 已保存的 DEEPSEEK_API_KEY。只读访问凭据文件，密钥仅发送至 DeepSeek 官方余额接口。"
+            "value": "自动使用 DSH 已登录的 DeepSeek 账号；未登录时使用已保存的 DeepSeek API Key。只读访问 DSH 凭据。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "自動使用 DSH 已儲存的 DEEPSEEK_API_KEY。以唯讀方式存取憑據檔案，金鑰僅傳送至 DeepSeek 官方餘額介面。"
+            "value": "自動使用 DSH 已登入的 DeepSeek 帳戶；未登入時使用已儲存的 DeepSeek API Key。以唯讀方式存取 DSH 憑據。"
           }
         }
       }

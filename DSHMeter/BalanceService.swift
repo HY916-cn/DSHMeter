@@ -86,8 +86,27 @@ final class BalanceService: ObservableObject {
                     self.activeFingerprint = credential.fingerprint
                 }
                 self.source = credential.source
-                let snapshot = try await self.client.fetch(key: credential.key)
+                let snapshot = try await self.client.fetch(credential: credential,
+                                                          locale: L10n.locale.identifier,
+                                                          version: BundleInfo.version)
                 guard !Task.isCancelled, self.generation == currentGeneration else { return }
+                let current = try await Task.detached(priority: .utility) {
+                    try DSHCredentialReader.load(home: home)
+                }.value
+                guard !Task.isCancelled, self.generation == currentGeneration else { return }
+                guard current.fingerprint == credential.fingerprint else {
+                    self.snapshot = nil
+                    self.source = current.source
+                    self.activeFingerprint = current.fingerprint
+                    self.error = nil
+                    self.isStale = false
+                    self.isRefreshing = false
+                    self.task = nil
+                    self.schedule.succeeded()
+                    self.nextRetry = nil
+                    self.scheduleRefresh()
+                    return
+                }
                 self.snapshot = snapshot
                 self.error = nil
                 self.isStale = false

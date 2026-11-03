@@ -4,6 +4,7 @@ import Foundation
 import Yams
 
 public enum CredentialSource: String, Sendable {
+    case signedInAccount
     case storedFile
     case environment
     case homeEnvironment
@@ -18,7 +19,8 @@ public struct ResolvedCredential: Sendable, CustomStringConvertible, CustomDebug
         try validateCredential(key)
         self.key = key
         self.source = source
-        self.fingerprint = SHA256.hash(data: Data(key.utf8)).map { String(format: "%02x", $0) }.joined()
+        self.fingerprint = SHA256.hash(data: Data("\(source.rawValue)\u{0}\(key)".utf8))
+            .map { String(format: "%02x", $0) }.joined()
     }
 
     public var description: String { "ResolvedCredential(source: \(source.rawValue))" }
@@ -38,8 +40,8 @@ public enum DSHCredentialReader {
         environment: [String: String] = ProcessInfo.processInfo.environment
     ) throws -> ResolvedCredential {
         if let text = try readPrivateFile(home.appendingPathComponent(".credentials.yaml")),
-           let key = try storedKey(text) {
-            return try ResolvedCredential(key: key, source: .storedFile)
+           let credential = try storedCredential(text) {
+            return credential
         }
         if let key = environment["DEEPSEEK_API_KEY"], !key.isEmpty {
             return try ResolvedCredential(key: key, source: .environment)
@@ -82,7 +84,7 @@ public enum DSHCredentialReader {
         return text
     }
 
-    private static func storedKey(_ text: String) throws -> String? {
+    private static func storedCredential(_ text: String) throws -> ResolvedCredential? {
         do {
             // Yams 6.1 rejects duplicate mapping keys. Explicit UTF-8 avoids parser environment logging.
             guard let root = try compose(yaml: text, .default, .default, .utf8),
@@ -90,19 +92,36 @@ public enum DSHCredentialReader {
             try validateMappingKeys(root)
             if let version = root["version"] {
                 guard version.int == 1 else { throw DSHMeterError.credentialMalformed }
-                if let records = root["records"], records.mapping == nil {
-                    throw DSHMeterError.credentialMalformed
+                if let records = root["records"] {
+                    try validateMappingKeys(records)
+                    if let record = records["deepseek-account-platform/default"] {
+                        try validateMappingKeys(record)
+                        guard record["kind"]?.tag == Tag(.str), record["kind"]?.string == "grant",
+                              let payload = record["payload"] else {
+                            throw DSHMeterError.credentialMalformed
+                        }
+                        try validateMappingKeys(payload)
+                        guard payload["version"]?.tag == Tag(.int), payload["version"]?.int == 1,
+                              payload["issuer"]?.tag == Tag(.str),
+                              payload["issuer"]?.string == "https://platform.deepseek.com",
+                              let token = try stringKey(payload["token"]) else {
+                            throw DSHMeterError.credentialMalformed
+                        }
+                        return try ResolvedCredential(key: token, source: .signedInAccount)
+                    }
                 }
                 guard let refs = root["refs"] else { return nil }
                 guard case .mapping = refs else { throw DSHMeterError.credentialMalformed }
                 try validateMappingKeys(refs)
-                return try stringKey(refs["DEEPSEEK_API_KEY"])
+                guard let key = try stringKey(refs["DEEPSEEK_API_KEY"]) else { return nil }
+                return try ResolvedCredential(key: key, source: .storedFile)
             }
             // The pre-release store used a flat mapping of reference names.
             guard root["refs"] == nil, root["records"] == nil else {
                 throw DSHMeterError.credentialMalformed
             }
-            return try stringKey(root["DEEPSEEK_API_KEY"])
+            guard let key = try stringKey(root["DEEPSEEK_API_KEY"]) else { return nil }
+            return try ResolvedCredential(key: key, source: .storedFile)
         } catch let error as DSHMeterError { throw error }
         catch { throw DSHMeterError.credentialMalformed }
     }

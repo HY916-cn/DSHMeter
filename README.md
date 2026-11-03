@@ -1,6 +1,6 @@
 # DSHMeter
 
-原生 macOS 菜单栏余额工具，自动复用 **DeepSeek Harness（DSH）已配置的 DeepSeek API Key**，显示 API 账户余额。
+原生 macOS 菜单栏余额工具，自动复用 **DeepSeek Harness（DSH）已登录的 DeepSeek 账号**，显示账户余额。
 
 沿用 [CodexMeter](https://github.com/raycalrui/CodexMeter) 与 [ClaudeMeter](https://github.com/HY916-cn/ClaudeMeter) 的菜单栏弹窗布局：380 点宽度、紧凑指标行、白蓝进度条、双环及两行菜单栏文字、分隔线、刷新按钮、设置入口及更新时间。设置窗口沿用原项目的侧边栏尺寸和原生分组。DSHMeter 是独立社区项目，采用 MIT 许可。
 
@@ -8,35 +8,35 @@
 
 系统要求：macOS 13 或更新版本。当前预编译包适用于 Apple Silicon（M 系列芯片）。
 
-1. 前往 [Releases](https://github.com/HY916-cn/DSHMeter/releases) 下载 `DSHMeter-0.1.1-macOS-arm64.zip`。
+1. 前往 [Releases](https://github.com/HY916-cn/DSHMeter/releases) 下载 `DSHMeter-0.1.2-macOS-arm64.zip`。
 2. 解压，将 `DSHMeter.app` 拖入“应用程序”文件夹。
-3. 打开应用，点击菜单栏的银行卡图标或余额金额。
+3. 打开应用，点击菜单栏的双环图标或余额金额。
 
 社区构建采用 ad-hoc 签名，尚未经过 Apple 公证。首次打开如被 macOS 阻止，请核对下载来源为本项目发行页面，再按照“系统设置 → 隐私与安全性”中的提示手动允许打开。
 
 ## 首次使用
 
 > [!IMPORTANT]
-> **DSHMeter 会自动读取 DSH 已保存的 API Key，不需要在 DSHMeter 再次输入。**
+> **在 DSH 登录 DeepSeek 账号后，直接打开 DSHMeter 即可读取余额，无需重复登录或输入密钥。**
 >
-> **请先确认 DSH → 设置 → 模型中的 DeepSeek 官方 API 已配置并保存 API Key。仅安装 DSH 或登录 DSH 账户，可能尚未配置 API Key。**
+> 在 DSH → 设置 → 模型中确认“DeepSeek 账号”为“已登录”。DSHMeter 优先复用该登录状态；没有已登录账号时，才使用 DSH 已配置的 DeepSeek API Key。
 >
-> 默认读取 `~/.dsh/.credentials.yaml` 的 `refs.DEEPSEEK_API_KEY`。使用自定义 DSH 目录时，请在 DSHMeter 的“设置 → 账户 → DSH 目录”中选择该目录，然后点击“应用并刷新”。选择的是包含凭据文件的文件夹。
+> 默认读取 `~/.dsh/.credentials.yaml`。自定义 DSH 目录请在 DSHMeter 的“设置 → 账户 → DSH 目录”中选择该目录，点击“应用并刷新”。选择的是包含凭据文件的文件夹。
 
-### 1. 在 DSH 确认凭据
+### 1. 在 DSH 确认登录
 
-打开 DSH Desktop、DSH NEXT 或已安装的 DSH Web，进入“设置 → 模型”，找到 DeepSeek 官方 API 配置。已经保存过 API Key 的用户可以直接进行下一步；首次配置的用户可从 [DeepSeek 开放平台](https://platform.deepseek.com/api_keys) 获取 API Key 并在 DSH 中保存。
+打开 DSH Desktop、DSH NEXT 或 DSH Web，完成 DeepSeek 账号登录。在“设置 → 模型”页面，确认“DeepSeek 账号”显示“已登录”，再打开 DSHMeter。
 
-如果使用 DSH 终端启动的 Web 界面，在该界面完成同样的模型配置即可。DSHMeter 随后直接读取本机凭据，DSH 无须一直运行，也无须启动额外终端会话。
+DSHMeter 只读复用 DSH 保存的登录凭据，DSH 无须一直运行，也无须额外打开终端。登录失效时，请回到 DSH 重新登录。
 
 ### 2. 打开 DSHMeter
 
 启动应用后，菜单栏会显示 `¥12.34` 这样的余额金额。点击后可查看：
 
-- API 总余额；
+- 账户总余额；
 - 未过期的赠送余额；
 - 充值余额；
-- DeepSeek 返回的 API 可用状态；
+- 当前余额可用状态；
 - 上次成功更新时间。
 
 充值与赠送余额采用原项目的白蓝指标条显示，占比以当前总余额为分母。菜单栏保留双环、双横条、紧凑横条和金额等六种显示方式；双环外圈表示充值占比，内圈表示赠送占比。
@@ -45,15 +45,18 @@
 
 ### 3. 配置来源和优先级
 
-每次刷新都重新解析以下来源，首个含有有效 `DEEPSEEK_API_KEY` 的来源生效：
+每次刷新都重新解析以下来源：
 
-1. 所选 DSH 目录下的 `.credentials.yaml`，支持当前 `version: 1` 的 `refs` 结构和早期平铺结构。
-2. DSHMeter 启动时继承的 `DEEPSEEK_API_KEY` 环境变量。
-3. 所选 DSH 目录下的 `.env`。
+1. 所选 DSH 目录下 `.credentials.yaml` 中的已登录账号：`records.deepseek-account-platform/default`。
+2. 未登录账号时，使用同一文件中的 `refs.DEEPSEEK_API_KEY`（兼容早期平铺格式）。
+3. DSHMeter 启动时继承的 `DEEPSEEK_API_KEY` 环境变量。
+4. 所选 DSH 目录下的 `.env`。
 
-目录默认使用 DSHMeter 启动环境中的 `DSH_HOME`，否则使用 `~/.dsh`。从 Finder 启动的应用通常不会继承终端临时 `export` 的变量；这种情况下，在 DSH 中保存凭据，或在 DSHMeter 设置中选择实际 DSH 目录。
+账号凭据存在但损坏、来自其他平台环境或被服务端拒绝时，会明确报错，不切换到另一账户的余额。退出 DSH 账号后，如果配置了备用 API Key，后续刷新将使用该来源，弹窗副标题显示“DeepSeek API”。
 
-更换 DSH 目录或检测到 API Key 变化时，会先清除原账户余额，再读取新余额。DSHMeter 只读访问 DSH 的配置，不修改 DSH 文件。
+目录默认使用 DSHMeter 启动环境中的 `DSH_HOME`，否则使用 `~/.dsh`。从 Finder 启动的应用通常不会继承终端临时 `export` 的变量；使用自定义目录时，请在设置中选择实际 DSH 目录。
+
+登录账号、API Key 或 DSH 目录变化时，会清除原账户余额。进行中的查询若发现登录状态已变化，会丢弃旧结果。DSHMeter 不修改 DSH 文件、不执行登录或退出操作。
 
 ## 刷新与错误处理
 
@@ -64,10 +67,10 @@
 
 | 提示 | 处理方式 |
 | --- | --- |
-| 未找到 API Key | 在 DSH → 设置 → 模型保存 DeepSeek API Key；确认 DSHMeter 的 DSH 目录正确。 |
+| 未找到账号 | 打开 DSH 并完成 DeepSeek 账号登录；确认 DSHMeter 的 DSH 目录正确。 |
 | 凭据无法读取或格式错误 | 检查 DSH 目录，在 DSH 中重新保存凭据；损坏的高优先级文件会明确报错。 |
 | 凭据权限错误 | 文件须归当前用户所有且权限为 `600`；可使用下面的命令恢复自己文件的权限。 |
-| API Key 被拒绝 | 在 DSH 中检查密钥是否已撤销或失效，更新后等待下一次刷新。 |
+| 认证失效或被拒绝 | 在 DSH 中重新登录；使用备用 API Key 时，检查密钥是否已撤销或失效。 |
 | 网络错误、超时或限流 | 检查网络及系统代理，按弹窗显示的时间等待重试。 |
 
 默认目录的权限修复命令：
@@ -82,9 +85,11 @@ chmod 600 "$HOME/.dsh/.env"
 
 ## 数据来源与隐私
 
-余额来自 DeepSeek 文档化接口 [`GET https://api.deepseek.com/user/balance`](https://api-docs.deepseek.com/api/get-user-balance/)，包括 `is_available` 以及 `balance_infos` 中的总余额、赠送余额与充值余额。认证使用 DSH 中已有的 API Key。
+已登录账号的余额沿用 [DSH 公开源码中的账号余额协议](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/credentials/deepseek-account-platform/README.md)：`GET https://platform.deepseek.com/api/v0/users/get_user_summary`，使用对应账号登录凭据认证，分别读取充值钱包与赠送钱包并按币种汇总。该协议可能随 DSH 更新而调整。
 
-凭据存储格式及优先级参照 [DSH 官方凭据说明](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/credentials/credentials-local/README.md)。应用仅读取所需字段，密钥保留在内存，仅通过 HTTPS 发往该官方余额接口；拒绝 HTTP 重定向。错误文案不包含接口原始响应或密钥。
+备用 API Key 方式使用文档化接口 [`GET https://api.deepseek.com/user/balance`](https://api-docs.deepseek.com/api/get-user-balance/)。两类凭据分别发送至各自对应的固定 HTTPS 地址，拒绝 HTTP 重定向；账号凭据的签发平台必须匹配 `https://platform.deepseek.com`。
+
+凭据存储格式参照 [DSH 官方凭据说明](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/credentials/credentials-local/README.md)。应用仅读取所需字段，凭据保留在内存，错误文案不包含原始响应或凭据。账号查询不会读取姓名、手机号或邮箱，也不会触发登录、退出或赠金确认操作。
 
 应用不发送模型请求、不读取会话、不收集遥测。偏好设置只保存 DSH 目录和外观、语言、菜单栏、币种、登录启动等选项。
 

@@ -34,6 +34,22 @@ public struct BalanceInfo: Codable, Equatable, Sendable {
         } catch { throw DSHMeterError.invalidResponse }
     }
 
+    init(currency: BalanceCurrency, toppedUpBalance: Decimal, grantedBalance: Decimal) throws {
+        var toppedUp = toppedUpBalance
+        var granted = grantedBalance
+        var total = Decimal()
+        guard NSDecimalAdd(&total, &toppedUp, &granted, .plain) == .noError, !total.isNaN else {
+            throw DSHMeterError.invalidResponse
+        }
+        self.currency = currency
+        self.toppedUpBalance = toppedUpBalance
+        self.grantedBalance = grantedBalance
+        self.totalBalance = total
+        self.toppedUpRaw = NSDecimalNumber(decimal: toppedUpBalance).stringValue
+        self.grantedRaw = NSDecimalNumber(decimal: grantedBalance).stringValue
+        self.totalRaw = NSDecimalNumber(decimal: total).stringValue
+    }
+
     public func encode(to encoder: Encoder) throws {
         var values = encoder.container(keyedBy: CodingKeys.self)
         try values.encode(currency, forKey: .currency)
@@ -51,6 +67,40 @@ public struct BalanceInfo: Codable, Equatable, Sendable {
             throw DSHMeterError.invalidResponse
         }
         return decimal
+    }
+
+    static func accountAmount(_ raw: String) throws -> Decimal {
+        guard raw.utf8.count <= 256,
+              raw.range(of: #"\A-?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?\z"#,
+                        options: .regularExpression) != nil,
+              let decimal = Decimal(string: raw, locale: Locale(identifier: "en_US_POSIX")),
+              !decimal.isNaN,
+              let expected = normalizedScientific(raw),
+              expected == normalizedScientific(NSDecimalNumber(decimal: decimal).stringValue) else {
+            throw DSHMeterError.invalidResponse
+        }
+        return decimal
+    }
+
+    private static func normalizedScientific(_ raw: String) -> String? {
+        let negative = raw.hasPrefix("-")
+        let unsigned = negative ? String(raw.dropFirst()) : raw
+        let parts = unsigned.lowercased().split(separator: "e", omittingEmptySubsequences: false)
+        guard let exponent = Int(parts.count == 2 ? parts[1] : "0") else { return nil }
+        let decimal = parts[0].split(separator: ".", omittingEmptySubsequences: false)
+        var digits = String(decimal.joined().drop(while: { $0 == "0" }))
+        if digits.isEmpty { return "0" }
+        let fractionCount = decimal.count == 2 ? decimal[1].count : 0
+        let (initialScale, underflow) = exponent.subtractingReportingOverflow(fractionCount)
+        guard !underflow else { return nil }
+        var scale = initialScale
+        while digits.last == "0" {
+            digits.removeLast()
+            let (next, overflow) = scale.addingReportingOverflow(1)
+            guard !overflow else { return nil }
+            scale = next
+        }
+        return (negative ? "-" : "") + digits + "e" + String(scale)
     }
 
     // Comparing normalized decimal text catches Foundation's silent precision rounding.

@@ -131,7 +131,7 @@ do {
         let environment = ProcessInfo.processInfo.environment
         let path = environment["DSH_HOME"] ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".dsh").path
         let credential = try DSHCredentialReader.load(home: URL(fileURLWithPath: NSString(string: path).expandingTildeInPath), environment: environment)
-        let snapshot = try await BalanceClient().fetch(key: credential.key)
+        let snapshot = try await BalanceClient().fetch(credential: credential, locale: Locale.current.identifier, version: "0.1.2")
         print("PASS: official balance query; currencies=\(snapshot.balanceInfos.count)")
     } else {
         try await fixtureChecks()
