@@ -9,9 +9,9 @@ struct AppSettingsView: View {
     @ObservedObject var history: UsageHistoryModel
     @ObservedObject var updateChecker: UpdateChecker
     @Environment(\.openWindow) private var openWindow
-    @State private var selection: String? = "settings.category.general"
-    @State private var showsClearConfirmation = false
-    @State private var actionError: String?
+    @ViewState private var selection: String? = "settings.category.general"
+    @ViewState private var showsClearConfirmation = false
+    @ViewState private var actionError: String?
 
     private let categories = [
         ("settings.category.general", "gearshape"),

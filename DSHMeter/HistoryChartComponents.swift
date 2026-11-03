@@ -320,8 +320,8 @@ struct CompactTokenActivityChart: View {
     var axisNow = Date()
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var selectedPoint: TokenChartPoint?
-    @State private var hoverLocation: CGPoint?
+    @ViewState private var selectedPoint: TokenChartPoint?
+    @ViewState private var hoverLocation: CGPoint?
 
     var body: some View {
         if let chartAxis {

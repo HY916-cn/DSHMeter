@@ -1,6 +1,6 @@
 # DSHMeter development guide
 
-Native macOS 13+ menu bar balance monitor. Version 0.1.4, build 5.
+Native macOS 13+ menu bar balance monitor. Version 0.1.5, build 6.
 Bundle: `com.huang.DSHMeter`. Remote: `HY916-cn/DSHMeter`.
 
 ## UI source
@@ -10,7 +10,9 @@ The authoritative interface is raycalrui/CodexMeter 1.7.0, commit
 in `DSHMeter/`, with the original history, settings, notification, developer,
 menu bar, and popover components. Preserve its layout, sizes, fonts, colors,
 controls, window scenes, and component hierarchy. Adapt data bindings and product
-identity. MenuBarProgressView.swift is the upstream implementation.
+identity. MenuBarProgressView.swift keeps the upstream implementation. `ViewState` is a
+type alias for the native `SwiftUI.State` property wrapper, used to build with
+Command Line Tools that do not ship the SDK 27 State macro plugin.
 
 - Keep the 380-point popover, original scroll behavior and fixed header/footer.
 - Settings preserve all six upstream categories and their original native forms.
@@ -50,7 +52,10 @@ README first-use steps must remain explicit with a GitHub IMPORTANT callout.
 
 ## Delivery
 
-Build with `bash Scripts/build_local.sh`. The user has requested that testing and
+Build with `bash Scripts/build_local.sh`. Use the selected current SDK (27 for
+the current release), and explicitly pass its version to the linker. Inspect
+`LC_BUILD_VERSION` in the resulting executable: `sdk` must match the build SDK,
+while `minos` remains 13.0. This metadata affects native system appearance. The user has requested that testing and
 desktop probes stop; do not run tests, live API checks, UI probes, or CI for this
 work. Use `[skip ci]` in commits. Preserve credentials and data when installing.
 Commit completed changes and push to origin. Keep `.build`, `dist`, and local

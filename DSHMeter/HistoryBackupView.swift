@@ -6,10 +6,10 @@ import UniformTypeIdentifiers
 struct HistoryBackupView: View {
     @ObservedObject var settings: AppSettings
     @ObservedObject var history: UsageHistoryModel
-    @State private var busy = false
-    @State private var pendingURL: URL?
-    @State private var message: String?
-    @State private var recoveryURL: URL?
+    @ViewState private var busy = false
+    @ViewState private var pendingURL: URL?
+    @ViewState private var message: String?
+    @ViewState private var recoveryURL: URL?
 
     private var backupType: UTType { UTType(filenameExtension: "dshmeterbackup") ?? .data }
     private var version: String {

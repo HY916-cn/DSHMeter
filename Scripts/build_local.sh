@@ -3,11 +3,11 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 TASK_ROOT="$PWD"
 TASK_SDK="${SDKROOT:-$(xcrun --sdk macosx --show-sdk-path)}"
-if [[ -z "${SDKROOT:-}" && -d /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk ]]; then
-    TASK_SDK=/Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
-fi
+TASK_SDK_VERSION="$(xcrun --sdk "$TASK_SDK" --show-sdk-version)"
 TASK_TRIPLE="$(uname -m)-apple-macosx13.0"
-xcrun swift build -c release --product DSHMeter --sdk "$TASK_SDK" --triple "$TASK_TRIPLE"
+# The linked SDK version controls adoption of the system's native appearance.
+xcrun swift build -c release --product DSHMeter --sdk "$TASK_SDK" --triple "$TASK_TRIPLE" \
+    -Xlinker -platform_version -Xlinker macos -Xlinker 13.0 -Xlinker "$TASK_SDK_VERSION"
 TASK_BIN="$(xcrun swift build -c release --sdk "$TASK_SDK" --triple "$TASK_TRIPLE" --show-bin-path)"
 TASK_APP="$TASK_ROOT/dist/DSHMeter.app"
 mkdir -p "$TASK_APP/Contents/MacOS" "$TASK_APP/Contents/Resources"

@@ -6,9 +6,9 @@
 
 ## 下载与安装
 
-系统要求：macOS 13 或更新版本。当前预编译包适用于 Apple Silicon（M 系列芯片）。
+系统要求：macOS 13 或更新版本。当前预编译包适用于 Apple Silicon（M 系列芯片）。发行包使用 macOS 27 SDK 构建，在 macOS 27 上采用系统当前的原生外观，较旧系统使用对应版本的系统控件。
 
-1. 前往 [Releases](https://github.com/HY916-cn/DSHMeter/releases) 下载 `DSHMeter-0.1.4-macOS-arm64.zip`。
+1. 前往 [Releases](https://github.com/HY916-cn/DSHMeter/releases) 下载 `DSHMeter-0.1.5-macOS-arm64.zip`。
 2. 解压，将 `DSHMeter.app` 拖入“应用程序”文件夹。
 3. 打开应用，点击菜单栏的余额金额。
 
@@ -125,14 +125,14 @@ chmod 600 "$HOME/.dsh/.env"
 
 ## 构建与验证
 
-使用安装了 Swift 的 macOS 环境。Xcode 可直接打开 `Package.swift`；也可以通过命令行构建应用：
+使用安装了 Swift 的 macOS 环境。构建脚本使用 `xcrun` 当前选择的 macOS SDK；最新系统外观的发行构建使用 macOS 27 SDK，并将程序的链接 SDK 版本正确写入二进制，最低系统版本保持 13.0。Xcode 可直接打开 `Package.swift`；也可以通过命令行构建应用：
 
 ```sh
 bash Scripts/test.sh
 bash Scripts/build_local.sh
 ```
 
-产物为 `dist/DSHMeter.app`。构建通过 Swift Package Manager 下载锁定版本的 [Yams](https://github.com/jpsim/Yams) 用于解析 YAML。完整 Xcode 环境还可运行 `swift test`。
+产物为 `dist/DSHMeter.app`。命令行构建通过 `ViewState` 类型别名直接使用原生 `SwiftUI.State` 属性包装器，兼容未附带新版 SwiftUI 宏插件的 Command Line Tools。构建通过 Swift Package Manager 下载锁定版本的 [Yams](https://github.com/jpsim/Yams) 用于解析 YAML。完整 Xcode 环境还可运行 `swift test`。
 
 可选的真实余额查询检查，只执行一次官方余额 GET，不打印密钥或余额内容：
 

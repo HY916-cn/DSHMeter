@@ -8,7 +8,7 @@ struct DeveloperOptionsView: View {
     @ObservedObject var updateChecker: UpdateChecker
     var embedded = false
     @Environment(\.dismiss) private var dismiss
-    @State private var didCopyConfiguration = false
+    @ViewState private var didCopyConfiguration = false
 
     var body: some View {
         VStack(spacing: 0) {

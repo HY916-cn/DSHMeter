@@ -13,9 +13,9 @@ struct MenuBarProgressView: View {
     let appearance: MenuBarAppearance
     var flashContext: String? = nil
 
-    @State private var previousFlashSample: FlashSample?
-    @State private var flashIntensity: CGFloat = 0
-    @State private var changedDigitIndices: Set<Int> = []
+    @ViewState private var previousFlashSample: FlashSample?
+    @ViewState private var flashIntensity: CGFloat = 0
+    @ViewState private var changedDigitIndices: Set<Int> = []
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private var renderedFlashIntensity: CGFloat = 0
     private var renderedDigitIndices: Set<Int> = []

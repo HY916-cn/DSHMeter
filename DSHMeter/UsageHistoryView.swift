@@ -6,16 +6,16 @@ struct UsageHistoryView: View {
     @ObservedObject var service: CodexUsageService
     @ObservedObject var settings: AppSettings
     @ObservedObject var history: UsageHistoryModel
-    @State private var selectedWindowID: String?
-    @State private var quotaMode: QuotaHistoryMode = .currentCycle
-    @State private var calendarPeriod: QuotaCalendarPeriod = .week
-    @State private var calendarOffset = 0
-    @State private var calendarQuotaSamples: [QuotaHistorySample] = []
-    @State private var oldestQuotaSampleDate: Date?
-    @State private var isLoadingCalendarQuota = false
-    @State private var tokenRange: TokenActivityRange = .month
-    @State private var showsClearConfirmation = false
-    @State private var actionError: String?
+    @ViewState private var selectedWindowID: String?
+    @ViewState private var quotaMode: QuotaHistoryMode = .currentCycle
+    @ViewState private var calendarPeriod: QuotaCalendarPeriod = .week
+    @ViewState private var calendarOffset = 0
+    @ViewState private var calendarQuotaSamples: [QuotaHistorySample] = []
+    @ViewState private var oldestQuotaSampleDate: Date?
+    @ViewState private var isLoadingCalendarQuota = false
+    @ViewState private var tokenRange: TokenActivityRange = .month
+    @ViewState private var showsClearConfirmation = false
+    @ViewState private var actionError: String?
 
     var body: some View {
         ZStack {

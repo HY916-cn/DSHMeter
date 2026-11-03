@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 private struct ScrollOnlyPopoverIndicators: ViewModifier {
-    @State private var hasScrolled = false
+    @ViewState private var hasScrolled = false
 
     @ViewBuilder
     func body(content: Content) -> some View {
@@ -29,7 +29,7 @@ struct ContentView: View {
     @ObservedObject var history: UsageHistoryModel
     @ObservedObject var updateChecker: UpdateChecker
     @Environment(\.openWindow) private var openWindow
-    @State private var maximumPopoverHeight = PopoverLayoutMetrics.initialMaximumHeight
+    @ViewState private var maximumPopoverHeight = PopoverLayoutMetrics.initialMaximumHeight
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
