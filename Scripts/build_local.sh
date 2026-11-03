@@ -23,8 +23,11 @@ catalog = json.loads((root / 'DSHMeter/Localizable.xcstrings').read_text())
 for language in ('en', 'zh-Hans', 'zh-Hant'):
     directory = app / 'Contents/Resources' / f'{language}.lproj'
     directory.mkdir(parents=True, exist_ok=True)
-    strings = {key: entry['localizations'][language]['stringUnit']['value']
-               for key, entry in catalog['strings'].items()}
+    strings = {}
+    for key, entry in catalog['strings'].items():
+        localizations = entry.get('localizations', {})
+        translated = localizations.get(language, localizations.get('en', {}))
+        strings[key] = translated.get('stringUnit', {}).get('value', key)
     (directory / 'Localizable.strings').write_bytes(plistlib.dumps(strings, fmt=plistlib.FMT_BINARY))
 iconset = root / '.build/AppIcon.iconset'
 iconset.mkdir(exist_ok=True)

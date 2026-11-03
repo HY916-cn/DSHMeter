@@ -2,13 +2,19 @@
 
 DSHMeter is a native macOS 13+ menu bar app that displays DeepSeek API balances.
 Its popover and settings layout are derived from CodexMeter and ClaudeMeter;
-preserve the MIT license and attribution. Product version: 0.1.2, build 3.
+preserve the MIT license and attribution. Product version: 0.1.3, build 4.
 
 - Bundle identifier: `com.huang.DSHMeter`; GitHub: `HY916-cn/DSHMeter`.
+- SourceUI contains copied source components. Preserve MenuBarProgressView,
+  ContentView, MetricBar, PopoverCustomizationView, DeveloperOptionsView,
+  AppSettingsView, and AboutView; adapt their data bindings instead of redrawing
+  equivalent-looking components.
 - Reuse the source app's 380-point scrollable popover, compact caption metric
   rows, white/blue bars, 32-point settings row, and AppKit menu bar geometry.
   The menu bar uses 18-point rings and the original 10.5/6.5-point two-line
-  text. Rings/bars show topped-up and granted shares of the current balance.
+  text. Default balance presentation uses money, with topped-up and granted
+  amounts as line items. Rings/bars use current balance divided by an optional
+  per-currency reference amount; without a reference, use amount-only display.
   Settings use the source's 180/200/240 sidebar and 760x600 minimum size.
   Keep accessibility labels and language/appearance choices consistent.
 - Credentials are read only from the selected DSH home, inherited launch

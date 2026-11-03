@@ -2,15 +2,15 @@
 
 原生 macOS 菜单栏余额工具，自动复用 **DeepSeek Harness（DSH）已登录的 DeepSeek 账号**，显示账户余额。
 
-沿用 [CodexMeter](https://github.com/raycalrui/CodexMeter) 与 [ClaudeMeter](https://github.com/HY916-cn/ClaudeMeter) 的菜单栏弹窗布局：380 点宽度、紧凑指标行、白蓝进度条、双环及两行菜单栏文字、分隔线、刷新按钮、设置入口及更新时间。设置窗口沿用原项目的侧边栏尺寸和原生分组。DSHMeter 是独立社区项目，采用 MIT 许可。
+直接复用 [CodexMeter](https://github.com/raycalrui/CodexMeter) 与 [ClaudeMeter](https://github.com/HY916-cn/ClaudeMeter) 的菜单栏、弹窗、菜单自定义、开发者外观编辑器和关于页组件。保留原有 380 点宽度、字体、间距、原生控件和设置分组，数据绑定适配为 DSH 余额。DSHMeter 是独立社区项目，采用 MIT 许可。
 
 ## 下载与安装
 
 系统要求：macOS 13 或更新版本。当前预编译包适用于 Apple Silicon（M 系列芯片）。
 
-1. 前往 [Releases](https://github.com/HY916-cn/DSHMeter/releases) 下载 `DSHMeter-0.1.2-macOS-arm64.zip`。
+1. 前往 [Releases](https://github.com/HY916-cn/DSHMeter/releases) 下载 `DSHMeter-0.1.3-macOS-arm64.zip`。
 2. 解压，将 `DSHMeter.app` 拖入“应用程序”文件夹。
-3. 打开应用，点击菜单栏的双环图标或余额金额。
+3. 打开应用，点击菜单栏的余额金额。
 
 社区构建采用 ad-hoc 签名，尚未经过 Apple 公证。首次打开如被 macOS 阻止，请核对下载来源为本项目发行页面，再按照“系统设置 → 隐私与安全性”中的提示手动允许打开。
 
@@ -39,7 +39,9 @@ DSHMeter 只读复用 DSH 保存的登录凭据，DSH 无须一直运行，也�
 - 当前余额可用状态；
 - 上次成功更新时间。
 
-充值与赠送余额采用原项目的白蓝指标条显示，占比以当前总余额为分母。菜单栏保留双环、双横条、紧凑横条和金额等六种显示方式；双环外圈表示充值占比，内圈表示赠送占比。
+菜单栏默认显示余额金额，较大金额采用 K/M 简写；弹窗中显示完整金额，以总余额为主，充值和赠送余额分别列出。
+
+如需显示余额进度，可在菜单栏配置页填写当前币种的“参考余额”。进度按“当前余额 ÷ 参考余额”显示，可选用原项目的进度环或横条组件。留空时仅显示金额；参考值仅用于显示，不限制消费。
 
 接口返回多个币种时分别显示，可在弹窗或设置中选择优先币种。金额按原币种显示。
 

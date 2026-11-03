@@ -40,7 +40,7 @@ final class BalanceService: ObservableObject {
     }
 
     var menuBarTitle: String {
-        if let balance = selectedBalance { return L10n.money(balance.totalBalance, currency: balance.currency.rawValue) }
+        if let balance = selectedBalance { return L10n.menuMoney(balance.totalBalance, currency: balance.currency.rawValue) }
         return isRefreshing ? "…" : "—"
     }
 
