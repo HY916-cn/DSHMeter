@@ -13,7 +13,6 @@ struct UsageHistoryView: View {
     @ViewState private var calendarQuotaSamples: [QuotaHistorySample] = []
     @ViewState private var oldestQuotaSampleDate: Date?
     @ViewState private var isLoadingCalendarQuota = false
-    @ViewState private var tokenRange: TokenActivityRange = .month
     @ViewState private var showsClearConfirmation = false
     @ViewState private var actionError: String?
 
@@ -115,7 +114,6 @@ struct UsageHistoryView: View {
     private var cards: some View {
         VStack(alignment: .leading, spacing: 18) {
             weeklyQuotaCard
-            tokenActivityCard
             storageCard
 
             if let error = history.errorMessage ?? actionError {
@@ -283,99 +281,6 @@ struct UsageHistoryView: View {
             Label(L10n.string("history.estimate.unavailable"), systemImage: "info.circle")
                 .font(.caption)
                 .foregroundStyle(.secondary)
-        }
-    }
-
-    private var tokenActivityCard: some View {
-        let points = tokenPoints
-        return VStack(alignment: .leading, spacing: 18) {
-            HStack(alignment: .firstTextBaseline) {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(L10n.string("history.tokens.title"))
-                        .font(.title3.weight(.bold))
-                    Text(L10n.string("history.tokens.local_help"))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-            }
-
-            HistoryRangePicker(
-                options: TokenActivityRange.allCases,
-                selection: $tokenRange,
-                title: { $0.localizedName }
-            )
-
-            if service.isTokenUsageUnavailable && tokenSnapshot == nil {
-                EmptyHistoryView(
-                    icon: "chart.bar.fill",
-                    title: L10n.string("history.tokens.unavailable"),
-                    message: service.tokenUsageErrorMessage
-                        ?? L10n.string("history.tokens.unavailable_help")
-                )
-            } else if points.isEmpty {
-                EmptyHistoryView(
-                    icon: "chart.bar.fill",
-                    title: L10n.string("history.tokens.no_daily"),
-                    message: L10n.string("history.tokens.unavailable_help")
-                )
-            } else {
-                HStack(spacing: 28) {
-                    MetricHeadline(
-                        title: tokenRange.localizedName,
-                        value: compactToken(tokenTotal(points)),
-                        tint: HistoryPalette.accentBright
-                    )
-                    MetricHeadline(
-                        title: L10n.string("history.tokens.latest"),
-                        value: compactToken(points.last?.tokens),
-                        tint: .primary
-                    )
-                    MetricHeadline(
-                        title: L10n.string("history.tokens.peak_period"),
-                        value: compactToken(points.map(\.tokens).max()),
-                        tint: .primary
-                    )
-                    Spacer()
-                }
-
-                CompactTokenActivityChart(
-                    points: points,
-                    showsAxes: true,
-                    granularity: tokenRange.chartGranularity,
-                    isInteractive: true,
-                    range: tokenRange
-                )
-                    .frame(height: 220)
-
-                if let summary = tokenSnapshot?.summary {
-                    tokenSummary(summary)
-                }
-            }
-        }
-        .padding(22)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .historyGlassCard()
-    }
-
-    private func tokenSummary(_ summary: TokenUsageSummary) -> some View {
-        HStack(spacing: 10) {
-            SummaryPill(
-                title: L10n.string("history.tokens.lifetime"),
-                value: compactToken(summary.lifetimeTokens)
-            )
-            SummaryPill(
-                title: L10n.string("history.tokens.current_streak"),
-                value: formattedDays(summary.currentStreakDays)
-            )
-            SummaryPill(
-                title: L10n.string("history.tokens.longest_streak"),
-                value: formattedDays(summary.longestStreakDays)
-            )
-            SummaryPill(
-                title: L10n.string("history.tokens.longest_turn"),
-                value: formattedDuration(summary.longestRunningTurnSeconds)
-            )
         }
     }
 
@@ -549,25 +454,6 @@ struct UsageHistoryView: View {
         return L10n.formattedInteger(Int64(consumption.percent)) + "%"
     }
 
-    private var tokenSnapshot: TokenUsageSnapshot? {
-        history.tokenUsage ?? service.tokenUsage
-    }
-
-    private var tokenPoints: [TokenChartPoint] {
-        TokenChartData.displayPoints(
-            TokenChartData.points(from: tokenSnapshot),
-            range: tokenRange,
-            now: Date()
-        )
-    }
-
-    private func tokenTotal(_ points: [TokenChartPoint]) -> Int64 {
-        points.reduce(0) { partial, point in
-            let (sum, overflow) = partial.addingReportingOverflow(point.tokens)
-            return overflow ? Int64.max : sum
-        }
-    }
-
     private var loadIdentifier: String {
         String(history.dataRevision)
     }
@@ -580,19 +466,6 @@ struct UsageHistoryView: View {
             String(calendarOffset),
             String(history.dataRevision)
         ].joined(separator: ":")
-    }
-
-    private func compactToken(_ value: Int64?) -> String {
-        value.map { CompactTokenFormatter.string($0, locale: L10n.locale) } ?? "—"
-    }
-
-    private func formattedDays(_ value: Int64?) -> String {
-        value.map { L10n.format("history.days.format", $0) } ?? "—"
-    }
-
-    private func formattedDuration(_ value: Int64?) -> String {
-        guard let value else { return "—" }
-        return L10n.compactDuration(seconds: value)
     }
 
     private func exportHistory() {
@@ -627,22 +500,6 @@ private struct MetricHeadline: View {
                 .foregroundStyle(tint)
                 .lineLimit(1)
         }
-    }
-}
-
-private struct SummaryPill: View {
-    let title: String
-    let value: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            Text(title).font(.caption2).foregroundStyle(.secondary)
-            Text(value).font(.subheadline.weight(.semibold).monospacedDigit())
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 11)
-        .padding(.vertical, 9)
-        .background(.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 11))
     }
 }
 

@@ -1,6 +1,6 @@
 # DSHMeter development guide
 
-Native macOS 13+ menu bar balance monitor. Version 0.1.5, build 6.
+Native macOS 13+ menu bar balance monitor. Version 0.1.6, build 7.
 Bundle: `com.huang.DSHMeter`. Remote: `HY916-cn/DSHMeter`.
 
 ## UI source
@@ -20,8 +20,11 @@ Command Line Tools that do not ship the SDK 27 State macro plugin.
   amounts occupy the original metric values; granted balance occupies the footer.
 - A balance percentage requires an explicit positive reference. Unknown values
   remain unknown. The blue metric bar shows topped-up / total composition.
-- History and token views retain the upstream empty/unavailable states when the
-  source lacks data. Never fabricate reset periods or token activity.
+- Balance history retains the upstream empty state when the source lacks data.
+  Popover sections are balance details, reset credits, and balance history. Decode
+  stored section IDs as strings and preserve recognized preferences.
+- The balance-only menu bar style draws a single line at a minimum of 14 points
+  with measured text width. Other styles retain their upstream caption rendering.
 - CodexUsageService is a UI contract adapter over BalanceService. It never starts
   Codex. Its history identity is salted and partitioned by credential and DSH home;
   reference changes use a separate history window identity.

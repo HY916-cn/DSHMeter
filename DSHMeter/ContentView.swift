@@ -266,7 +266,7 @@ struct ContentView: View {
                 return !visibleQuotaWindows.isEmpty
             case .resetCredits:
                 return service.rateLimitResetCredits != nil
-            case .quotaHistory, .tokenActivity:
+            case .quotaHistory:
                 return true
             }
         }
@@ -300,11 +300,6 @@ struct ContentView: View {
         case .quotaHistory:
             Button(action: openHistoryWindow) {
                 menuQuotaSection
-            }
-            .buttonStyle(.plain)
-        case .tokenActivity:
-            Button(action: openHistoryWindow) {
-                menuTokenSection
             }
             .buttonStyle(.plain)
         }
@@ -376,53 +371,6 @@ struct ContentView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var menuTokenSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .firstTextBaseline) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(L10n.string("history.tokens.title"))
-                        .font(.subheadline.weight(.semibold))
-                    Text(TokenActivityRange.month.localizedName)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-
-                Spacer()
-
-                if !menuTokenPoints.isEmpty {
-                    VStack(alignment: .trailing, spacing: 1) {
-                        Text(compactToken(menuTokenTotal))
-                            .font(.headline.monospacedDigit())
-                        Text(L10n.string("history.tokens.total"))
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-
-                Image(systemName: "chevron.right")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
-            }
-
-            if menuTokenPoints.isEmpty {
-                HStack(spacing: 8) {
-                    Image(systemName: "chart.bar.fill")
-                        .foregroundStyle(HistoryPalette.accent)
-                    Text(historySummary)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                .frame(maxWidth: .infinity, minHeight: 54, alignment: .leading)
-            } else {
-                CompactTokenActivityChart(points: menuTokenPoints)
-                    .frame(height: 92)
-            }
-        }
-        .contentShape(Rectangle())
-        .padding(.vertical, 2)
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
     private var menuQuotaCycle: QuotaHistorySeries? {
         let window = QuotaWindowSelection.preferredDefault(from: history.quotaWindows)
         guard let window else { return nil }
@@ -445,35 +393,6 @@ struct ContentView: View {
     private func openHistoryWindow() {
         openWindow(id: CodexMeterWindowID.history)
         NSApplication.shared.activate(ignoringOtherApps: true)
-    }
-
-    private var menuTokenPoints: [TokenChartPoint] {
-        TokenChartData.filtered(
-            TokenChartData.points(from: history.tokenUsage ?? service.tokenUsage),
-            range: .month,
-            now: Date()
-        )
-    }
-
-    private var menuTokenTotal: Int64 {
-        menuTokenPoints.reduce(0) { partial, point in
-            let (sum, overflow) = partial.addingReportingOverflow(point.tokens)
-            return overflow ? Int64.max : sum
-        }
-    }
-
-    private func compactToken(_ value: Int64) -> String {
-        CompactTokenFormatter.string(value, locale: L10n.locale)
-    }
-
-    private var historySummary: String {
-        if let lifetime = service.tokenUsage?.summary.lifetimeTokens {
-            return L10n.format(
-                "history.summary.tokens_format",
-                CompactTokenFormatter.string(lifetime, locale: L10n.locale)
-            )
-        }
-        return L10n.string("history.summary.local")
     }
 
     private var footer: some View {

@@ -105,6 +105,22 @@ struct MenuBarProgressView: View {
         return CGFloat(normalizedAppearance.staleIndicatorSize + 3)
     }
 
+    private var balanceOnlyAppearance: MenuBarAppearance {
+        var result = normalizedAppearance
+        result.percentageFontSize = max(14, result.percentageFontSize)
+        return result
+    }
+
+    private var balanceOnlyTextWidth: CGFloat {
+        let appearance = balanceOnlyAppearance
+        let font = NSFont.monospacedDigitSystemFont(
+            ofSize: appearance.percentageFontSize,
+            weight: appearance.percentageFontWeight.nsWeight
+        )
+        let measuredWidth = (title as NSString).size(withAttributes: [.font: font]).width
+        return max(CGFloat(appearance.textWidth), ceil(measuredWidth) + 2)
+    }
+
     private var imageSize: NSSize {
         let appearance = normalizedAppearance
         let padding = CGFloat(appearance.horizontalPadding * 2)
@@ -119,8 +135,10 @@ struct MenuBarProgressView: View {
             contentWidth = ring + spacing + text
         case .horizontalBarBesidePercentage, .dualBars:
             contentWidth = bar + spacing + text
-        case .compactBarBelowPercentage, .percentageOnly:
+        case .compactBarBelowPercentage:
             contentWidth = text
+        case .percentageOnly:
+            contentWidth = balanceOnlyTextWidth
         case .progressOnly:
             contentWidth = ring
         }
@@ -254,14 +272,14 @@ struct MenuBarProgressView: View {
                 )
 
             case .percentageOnly:
-                renderer.drawPercentageAndCaption(
+                renderer.drawSingleLineTitle(
                     in: NSRect(
                         x: cursorX,
                         y: 0,
-                        width: CGFloat(appearance.textWidth),
+                        width: balanceOnlyTextWidth,
                         height: rect.height
                     ),
-                    appearance: appearance
+                    appearance: balanceOnlyAppearance
                 )
 
             case .progressOnly:
@@ -521,6 +539,9 @@ struct MenuBarProgressView: View {
     }
 
     private var accessibilityText: String {
+        if style == .percentageOnly {
+            return ([title] + (isStale ? [L10n.string("data.stale")] : [])).joined(separator: ", ")
+        }
         guard let remainingPercent else { return L10n.string("menubar.unavailable") }
         let quota = L10n.format("menubar.remaining_format", remainingPercent)
         var components = [quota]

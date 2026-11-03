@@ -13,9 +13,6 @@ final class CodexUsageService: ObservableObject {
     @Published private(set) var isStale = false
     @Published private(set) var errorMessage: String?
     @Published private(set) var lastUpdated: Date?
-    @Published private(set) var tokenUsage: TokenUsageSnapshot?
-    @Published private(set) var isTokenUsageUnavailable = true
-    @Published private(set) var tokenUsageErrorMessage: String?
     @Published private(set) var rateLimitResetCredits: CodexRateLimitResetCreditsSummary?
     @Published private(set) var historyAccountKey: String?
 
@@ -42,7 +39,6 @@ final class CodexUsageService: ObservableObject {
         self.pushNotificationService = pushNotificationService ?? PushNotificationService(settings: settings)
         activeHomePath = settings.homeURL.standardizedFileURL.path
         balanceService = BalanceService(settings: settings)
-        tokenUsageErrorMessage = L10n.string("history.tokens.unavailable")
 
         balanceService.objectWillChange.sink { [weak self] _ in
             // Published values become readable after the current mutation completes.
@@ -172,7 +168,6 @@ final class CodexUsageService: ObservableObject {
                 " " + L10n.string("error.retry_at") + " " + L10n.time($0)
             } ?? "")
         }
-        tokenUsageErrorMessage = L10n.string("history.tokens.unavailable")
 
         guard !isStale, balanceService.error == nil,
               let date = snapshot?.fetchedAt,

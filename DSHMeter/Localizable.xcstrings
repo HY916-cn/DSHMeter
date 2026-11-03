@@ -559,24 +559,24 @@
       }
     },
     "backup.description": {
-      "extractionState": "stale",
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Back up all locally retained quota and token history for every account. Includes account-matching information, but no login credentials or app preferences. Keep the backup private. Records already removed by retention cannot be recovered."
+            "value": "Back up retained history for all accounts, including account-matching metadata. Login credentials and app settings are not included. Keep backups private; expired records cannot be recovered."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "备份所有账号当前保留的额度与 Token 历史，包含账号匹配信息，不包含登录凭据或 App 设置。请妥善保管备份；已被保留期限清理的数据无法找回。"
+            "value": "备份所有账号当前保留的历史，包含账号匹配信息，不包含登录凭据或 App 设置。请妥善保管备份；已被保留期限清理的数据无法找回。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "備份所有帳號目前保留的額度與 Token 歷史，包含帳號匹配資訊，不包含登入憑證或 App 設定。請妥善保管備份；已被保留期限清理的資料無法找回。"
+            "value": "备份所有账号当前保留的历史，包含账号匹配信息，不包含登录凭据或 App 设置。请妥善保管备份；已被保留期限清理的数据无法找回。"
           }
         }
       }
@@ -3553,24 +3553,24 @@
       }
     },
     "history.clear.message": {
-      "extractionState": "stale",
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This permanently removes all locally recorded quota and token history. Live quota data is unaffected."
+            "value": "This permanently deletes all local history and does not affect the live balance."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "这会永久删除本地记录的全部额度和 Token 历史，不影响实时额度数据。"
+            "value": "这会永久删除本地历史记录，不影响实时余额。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "這會永久刪除本機記錄的全部額度和 Token 歷史，不影響即時額度資料。"
+            "value": "这会永久删除本地历史记录，不影响实时余额。"
           }
         }
       }
@@ -4685,42 +4685,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Local balance-reference history; token activity unavailable"
+            "value": "Local balance-reference history"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "本地参考余额比例历史 · Token 活动不可用"
+            "value": "本地参考余额比例历史"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "本地参考余额比例历史 · Token 活动不可用"
-          }
-        }
-      }
-    },
-    "history.summary.tokens_format": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ lifetime tokens"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "累计 %@ Token"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "累計 %@ Token"
+            "value": "本機參考餘額比例歷史"
           }
         }
       }
@@ -4744,351 +4721,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "用量歷史"
-          }
-        }
-      }
-    },
-    "history.tokens.count": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tokens"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Token 数量"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Token 數量"
-          }
-        }
-      }
-    },
-    "history.tokens.current_streak": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Current streak"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "当前连续使用"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "目前連續使用"
-          }
-        }
-      }
-    },
-    "history.tokens.date": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Date"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "日期"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "日期"
-          }
-        }
-      }
-    },
-    "history.tokens.latest": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Latest period"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "最近一期"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "最近一期"
-          }
-        }
-      }
-    },
-    "history.tokens.lifetime": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lifetime tokens"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "累计 Token"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "累計 Token"
-          }
-        }
-      }
-    },
-    "history.tokens.local_help": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Daily activity accumulated locally on this Mac"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "在这台 Mac 上本地累计的每日活动"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "在這台 Mac 上本機累積的每日活動"
-          }
-        }
-      }
-    },
-    "history.tokens.longest_streak": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Longest streak"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "最长连续使用"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "最長連續使用"
-          }
-        }
-      }
-    },
-    "history.tokens.longest_turn": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Longest-running turn"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "最长运行任务"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "最長執行任務"
-          }
-        }
-      }
-    },
-    "history.tokens.no_daily": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Daily token buckets are not available for this account."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "此账户没有提供每日 Token 数据。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "此帳戶沒有提供每日 Token 資料。"
-          }
-        }
-      }
-    },
-    "history.tokens.peak": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Peak daily tokens"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "单日峰值 Token"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "單日峰值 Token"
-          }
-        }
-      }
-    },
-    "history.tokens.peak_period": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Peak period"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "单期峰值"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "單期峰值"
-          }
-        }
-      }
-    },
-    "history.tokens.title": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Token Activity"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Token 活动"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Token 活動"
-          }
-        }
-      }
-    },
-    "history.tokens.total": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Total tokens"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Token 总量"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Token 總量"
-          }
-        }
-      }
-    },
-    "history.tokens.unavailable": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Token activity unavailable"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Token 活动不可用"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Token 活動無法使用"
-          }
-        }
-      }
-    },
-    "history.tokens.unavailable_help": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The DSH balance source does not provide token activity."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "DSH 余额数据源未提供 Token 活动。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "DSH 余额数据源未提供 Token 活动。"
           }
         }
       }
@@ -6561,29 +6193,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "重置機會"
-          }
-        }
-      }
-    },
-    "settings.popover.section.tokenActivity": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Token Activity"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Token 活动"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Token 活動"
           }
         }
       }
