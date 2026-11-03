@@ -11,9 +11,9 @@ final class BalanceService: ObservableObject {
     @Published private(set) var error: DSHMeterError?
     @Published private(set) var source: CredentialSource?
     @Published private(set) var nextRetry: Date?
+    @Published private(set) var credentialFingerprint: String?
     private let settings: AppSettings
     private let client = BalanceClient()
-    private var activeFingerprint: String?
     private var task: Task<Void, Never>?
     private var timer: Timer?
     private var generation = UUID()
@@ -57,7 +57,7 @@ final class BalanceService: ObservableObject {
         timer?.invalidate()
         snapshot = nil
         source = nil
-        activeFingerprint = nil
+        credentialFingerprint = nil
         error = nil
         isStale = false
         isRefreshing = false
@@ -80,10 +80,10 @@ final class BalanceService: ObservableObject {
                     try DSHCredentialReader.load(home: home)
                 }.value
                 guard !Task.isCancelled, self.generation == currentGeneration else { return }
-                if self.activeFingerprint != credential.fingerprint {
+                if self.credentialFingerprint != credential.fingerprint {
                     self.snapshot = nil
                     self.isStale = false
-                    self.activeFingerprint = credential.fingerprint
+                    self.credentialFingerprint = credential.fingerprint
                 }
                 self.source = credential.source
                 let snapshot = try await self.client.fetch(credential: credential,
@@ -97,7 +97,7 @@ final class BalanceService: ObservableObject {
                 guard current.fingerprint == credential.fingerprint else {
                     self.snapshot = nil
                     self.source = current.source
-                    self.activeFingerprint = current.fingerprint
+                    self.credentialFingerprint = current.fingerprint
                     self.error = nil
                     self.isStale = false
                     self.isRefreshing = false
@@ -121,7 +121,7 @@ final class BalanceService: ObservableObject {
                      .credentialTooLarge, .credentialMalformed, .invalidCredential:
                     self.snapshot = nil
                     self.source = nil
-                    self.activeFingerprint = nil
+                    self.credentialFingerprint = nil
                 default: break
                 }
                 self.isStale = self.snapshot != nil

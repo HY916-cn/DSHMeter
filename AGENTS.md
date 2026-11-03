@@ -1,53 +1,57 @@
 # DSHMeter development guide
 
-DSHMeter is a native macOS 13+ menu bar app that displays DeepSeek API balances.
-Its popover and settings layout are derived from CodexMeter and ClaudeMeter;
-preserve the MIT license and attribution. Product version: 0.1.3, build 4.
+Native macOS 13+ menu bar balance monitor. Version 0.1.4, build 5.
+Bundle: `com.huang.DSHMeter`. Remote: `HY916-cn/DSHMeter`.
 
-- Bundle identifier: `com.huang.DSHMeter`; GitHub: `HY916-cn/DSHMeter`.
-- SourceUI contains copied source components. Preserve MenuBarProgressView,
-  ContentView, MetricBar, PopoverCustomizationView, DeveloperOptionsView,
-  AppSettingsView, and AboutView; adapt their data bindings instead of redrawing
-  equivalent-looking components.
-- Reuse the source app's 380-point scrollable popover, compact caption metric
-  rows, white/blue bars, 32-point settings row, and AppKit menu bar geometry.
-  The menu bar uses 18-point rings and the original 10.5/6.5-point two-line
-  text. Default balance presentation uses money, with topped-up and granted
-  amounts as line items. Rings/bars use current balance divided by an optional
-  per-currency reference amount; without a reference, use amount-only display.
-  Settings use the source's 180/200/240 sidebar and 760x600 minimum size.
-  Keep accessibility labels and language/appearance choices consistent.
-- Credentials are read only from the selected DSH home, inherited launch
-  environment, and the DSH home `.env`. Prefer the stored
-  `deepseek-account-platform/default` account grant;
-  fall back to `DEEPSEEK_API_KEY` only when no account grant exists.
-  Never write DSH configuration, persist/copy keys, log secrets, or read chats.
-- Parse YAML with Yams, including duplicate-key rejection. Enforce current-user
-  ownership, owner-only permissions, regular files, and bounded reads.
-- Account grants must have the official Platform issuer and are sent only to
-  `GET https://platform.deepseek.com/api/v0/users/get_user_summary` through
-  `x-dsh-auth-token`. API keys go only to `GET https://api.deepseek.com/user/balance`
-  as Bearer credentials. Do not query profile, log in/out, acknowledge bonuses,
-  or delete/rewrite grants. Account failures never silently switch identities.
-  Reject redirects, sanitize errors, bound request duration, and preserve exact decimal amounts.
-- Keep currency balances separate. Missing or malformed amounts are errors.
-  A total balance is an amount; do not fabricate a quota percentage.
-- Refresh every 10 seconds while the popover is open, every 60 seconds in the
-  background, at least 10 seconds between attempts. Failures back off, preserve
-  the previous successful balance as stale, and display the next retry time.
-- Read credentials on each refresh. Clear the previous balance when the account
-  grant, API key, or DSH home changes. A delayed request must never overwrite another source.
-- Credentials and balances remain in memory; preferences contain presentation
-  settings and the DSH home path. Application identity stays independent.
-- README onboarding must explain DSH account login and optional API Key fallback,
-  automatic reading, custom home, missing credentials, and permission errors.
-  Put the critical first-use requirement in a GitHub IMPORTANT callout.
-- Use `bash Scripts/test.sh` and `bash Scripts/build_local.sh`. XCTest is
-  available through `swift test` with full Xcode; CLI checks also work with CLT.
-- `bash Scripts/test.sh --live` makes one real read-only balance request.
-  Fixture checks must never contact a real API or read personal credentials.
-- Check the actual app when desktop tools permit it, and distinguish fixture,
-  authenticated API, rendering, and live desktop verification in reports.
-- Commit completed changes and push to the project's origin. Keep credentials,
-  local data, `.build`, and `dist` out of Git. Release archives are ad-hoc signed;
-  describe signing and notarization accurately.
+## UI source
+
+The authoritative interface is raycalrui/CodexMeter 1.7.0, commit
+`4c6baeec0ce3a502d3fbcf833782f823b0c1ec32`. The full SwiftUI source lives directly
+in `DSHMeter/`, with the original history, settings, notification, developer,
+menu bar, and popover components. Preserve its layout, sizes, fonts, colors,
+controls, window scenes, and component hierarchy. Adapt data bindings and product
+identity. MenuBarProgressView.swift is the upstream implementation.
+
+- Keep the 380-point popover, original scroll behavior and fixed header/footer.
+- Settings preserve all six upstream categories and their original native forms.
+- Balance metric rows reuse MetricBar and UsageWindowRow. Total and topped-up
+  amounts occupy the original metric values; granted balance occupies the footer.
+- A balance percentage requires an explicit positive reference. Unknown values
+  remain unknown. The blue metric bar shows topped-up / total composition.
+- History and token views retain the upstream empty/unavailable states when the
+  source lacks data. Never fabricate reset periods or token activity.
+- CodexUsageService is a UI contract adapter over BalanceService. It never starts
+  Codex. Its history identity is salted and partitioned by credential and DSH home;
+  reference changes use a separate history window identity.
+- UpdateChecker uses this project's GitHub Releases. Manual downloads are
+  supported; automatic installation stays disabled until a signed feed exists.
+- Keep all MIT attribution and the bundled license.
+
+## Data and credentials
+
+DSHMeterCore owns credential parsing and balance requests. Prefer the existing
+DSH account grant in `.credentials.yaml`; use API-key fallback only when no grant
+exists. Read-only files, bounded reads, owner-only permission, no symlinks, no raw
+credential or response logging. Do not read chats or profile information, modify
+DSH configuration, or trigger login/logout/model requests.
+
+Account credentials go only to the fixed official Platform wallet endpoint;
+API keys go only to the official API balance endpoint. Reject redirects and
+sanitize errors. Preserve exact decimal balances and separate currencies.
+
+Refresh every 10 seconds while open, 60 seconds in the background, minimum
+10 seconds between attempts. Preserve last good balances as stale on temporary
+failure and use bounded retry backoff. Re-read credentials each refresh, clear
+prior values on source changes, and discard responses from an obsolete identity.
+
+Credentials and current balances stay in memory. Optional reference percentages
+use the DSHMeter history database. Push credentials use its own Keychain namespace.
+README first-use steps must remain explicit with a GitHub IMPORTANT callout.
+
+## Delivery
+
+Build with `bash Scripts/build_local.sh`. The user has requested that testing and
+desktop probes stop; do not run tests, live API checks, UI probes, or CI for this
+work. Use `[skip ci]` in commits. Preserve credentials and data when installing.
+Commit completed changes and push to origin. Keep `.build`, `dist`, and local
+credentials out of Git. Describe ad-hoc signing and notarization accurately.

@@ -1,4 +1,5 @@
 import Foundation
+import DSHMeterCore
 
 /// Compares remaining quota with the remaining fraction of the reset window.
 enum ConsumptionPace: Equatable, Sendable {
@@ -19,6 +20,26 @@ struct CodexUsageWindow: Identifiable, Equatable, Sendable {
     let usedPercent: Int
     let windowDurationMins: Int?
     let resetsAt: Date?
+    var balance: BalanceInfo? = nil
+    var balanceReference: Decimal? = nil
+    var balanceAvailable: Bool? = nil
+
+    /// A percentage exists only when the user supplies a positive reference.
+    var balancePercent: Double? {
+        guard let balance, let reference = balanceReference, reference > 0 else { return nil }
+        return Self.displayPercent(balance.totalBalance / reference)
+    }
+
+    var toppedUpPercent: Double? {
+        guard let balance, balance.totalBalance > 0 else { return nil }
+        return Self.displayPercent(balance.toppedUpBalance / balance.totalBalance)
+    }
+
+    private static func displayPercent(_ fraction: Decimal) -> Double? {
+        let value = NSDecimalNumber(decimal: fraction).doubleValue * 100
+        guard value.isFinite else { return nil }
+        return min(100, max(0, value))
+    }
 
     var remainingPercent: Int {
         Self.clamp(100 - usedPercent)

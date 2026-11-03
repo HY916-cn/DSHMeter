@@ -4,7 +4,7 @@ import SwiftUI
 /// Keeping this outside MenuBarExtra prevents the controls from disappearing
 /// whenever the user interacts with a picker or another app window.
 struct PopoverCustomizationView: View {
-    @ObservedObject var service: BalanceService
+    @ObservedObject var service: CodexUsageService
     @ObservedObject var settings: AppSettings
 
     var body: some View {
@@ -17,11 +17,8 @@ struct PopoverCustomizationView: View {
             }
 
             Section(L10n.string("settings.popover.menu_bar_ring")) {
-                Picker(L10n.string("settings.menubar_style"), selection: Binding(
-                    get: { settings.balanceDisplayStyle(for: referenceCurrency) },
-                    set: { settings.menuBarStyle = $0 }
-                )) {
-                    ForEach(settings.referenceBalance(for: referenceCurrency) == nil ? [.percentageOnly] : MenuBarDisplayStyle.allCases.filter { $0 != .dualBars }) { style in
+                Picker(L10n.string("settings.menubar_style"), selection: $settings.menuBarStyle) {
+                    ForEach(MenuBarDisplayStyle.allCases) { style in
                         Text(style.localizedName).tag(style)
                     }
                 }
@@ -38,18 +35,6 @@ struct PopoverCustomizationView: View {
                     }
                 }
                 .accessibilityHint(L10n.string("settings.popover.ring_source.hint"))
-                LabeledContent(L10n.string("balance.reference") + " · " + referenceCurrency) {
-                    TextField(L10n.string("balance.reference_optional"), text: Binding(
-                        get: { settings.referenceBalances[referenceCurrency] ?? "" },
-                        set: { settings.referenceBalances[referenceCurrency] = $0 }
-                    ))
-                    .textFieldStyle(.roundedBorder)
-                    .accessibilityLabel(L10n.string("balance.reference"))
-                }
-                Text(L10n.string("balance.reference_help"))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
             }
 
             Section(L10n.string("settings.popover.visible_content")) {
@@ -79,11 +64,6 @@ struct PopoverCustomizationView: View {
         .formStyle(.grouped)
         .navigationTitle(L10n.string("settings.popover.title"))
         .frame(minWidth: 500, minHeight: 580)
-    }
-
-    private var referenceCurrency: String {
-        settings.popoverContent.selectedMenuBarWindow(from: service.windows)?.currency.rawValue
-            ?? settings.preferredCurrency
     }
 
     private var menuBarWindowSelection: Binding<String?> {
@@ -166,7 +146,7 @@ struct PopoverCustomizationView: View {
 
 /// Shows the currently enabled sections in their actual stored order.
 private struct PopoverContentPreview: View {
-    @ObservedObject var service: BalanceService
+    @ObservedObject var service: CodexUsageService
     let configuration: PopoverContentConfiguration
 
     private var visibleSections: [PopoverContentSection] {
@@ -227,6 +207,15 @@ private struct PopoverContentPreview: View {
                 return configuration.visibleQuotaWindows(from: service.windows).map {
                     PreviewRow(title: $0.name, symbolName: "gauge.with.dots.needle.50percent")
                 }
+            case .resetCredits:
+                return [PreviewRow(
+                    title: section.localizedName,
+                    symbolName: "arrow.counterclockwise.circle"
+                )]
+            case .quotaHistory:
+                return [PreviewRow(title: section.localizedName, symbolName: "chart.xyaxis.line")]
+            case .tokenActivity:
+                return [PreviewRow(title: section.localizedName, symbolName: "chart.bar.fill")]
             }
         }
     }

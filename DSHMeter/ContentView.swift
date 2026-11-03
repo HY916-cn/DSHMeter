@@ -1,0 +1,865 @@
+import AppKit
+import SwiftUI
+
+private struct ScrollOnlyPopoverIndicators: ViewModifier {
+    @State private var hasScrolled = false
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if #available(macOS 15.0, *) {
+            content
+                .scrollIndicators(hasScrolled ? .automatic : .hidden)
+                .onScrollPhaseChange { _, phase in
+                    // Once scrolling begins, let AppKit own its normal fade-out.
+                    if phase == .interacting || phase == .decelerating {
+                        hasScrolled = true
+                    }
+                }
+                .onAppear { hasScrolled = false }
+                .onDisappear { hasScrolled = false }
+        } else {
+            content
+        }
+    }
+}
+
+struct ContentView: View {
+    @ObservedObject var service: CodexUsageService
+    @ObservedObject var settings: AppSettings
+    @ObservedObject var history: UsageHistoryModel
+    @ObservedObject var updateChecker: UpdateChecker
+    @Environment(\.openWindow) private var openWindow
+    @State private var maximumPopoverHeight = PopoverLayoutMetrics.initialMaximumHeight
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            header
+                .layoutPriority(1)
+
+            ScrollView {
+                scrollableContent
+                    .padding(.trailing, 12)
+            }
+            .modifier(ScrollOnlyPopoverIndicators())
+            .clipped()
+            .padding(.trailing, -12)
+
+            bottomControls
+                .layoutPriority(1)
+        }
+        .padding(16)
+        .frame(width: 380)
+        .frame(maxHeight: maximumPopoverHeight)
+        .fixedSize(horizontal: false, vertical: true)
+        .background {
+            PopoverScreenHeightReader { visibleHeight in
+                let updatedHeight = PopoverLayoutMetrics.maximumHeight(
+                    forScreenVisibleHeight: visibleHeight
+                )
+                guard abs(maximumPopoverHeight - updatedHeight) > 0.5 else { return }
+                maximumPopoverHeight = updatedHeight
+            }
+        }
+        .onAppear {
+            service.setPopoverVisible(true)
+            settings.refreshLaunchAtLoginStatus()
+            service.refreshIfNeeded()
+        }
+        .onDisappear {
+            service.setPopoverVisible(false)
+        }
+        .task(id: history.dataRevision) {
+            // Load the preferred weekly cycle whenever the popover appears or
+            // a successful refresh records a new local history sample.
+            await history.load()
+        }
+        .alert(
+            L10n.string("settings.error_title"),
+            isPresented: Binding(
+                get: { settings.settingsError != nil },
+                set: { if !$0 { settings.clearSettingsError() } }
+            )
+        ) {
+            Button(L10n.string("action.ok")) {
+                settings.clearSettingsError()
+            }
+
+            if settings.settingsDestination != nil {
+                Button(L10n.string("action.open_system_settings")) {
+                    settings.openRelevantSystemSettings()
+                    settings.clearSettingsError()
+                }
+            }
+        } message: {
+            Text(settings.settingsError ?? "")
+        }
+    }
+
+    private var scrollableContent: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            if settings.developerPreviewEnabled {
+                previewModeBanner
+            }
+
+            if service.isStale {
+                staleBanner
+            }
+
+            if case .updateAvailable(let release) = updateChecker.state {
+                updateBanner(release)
+            }
+
+            Divider()
+
+            if service.isLoading && service.windows.isEmpty {
+                loadingView
+            } else if let errorMessage = service.errorMessage,
+                      service.windows.isEmpty {
+                errorView(errorMessage)
+            } else {
+                if let errorMessage = service.errorMessage {
+                    inlineErrorView(errorMessage)
+                }
+
+                configurableContent
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var bottomControls: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Divider()
+            SettingsSection(service: service, settings: settings)
+            Divider()
+            footer
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func updateBanner(_ release: AvailableUpdate) -> some View {
+        Button {
+            openWindow(id: CodexMeterWindowID.about)
+            NSApplication.shared.activate(ignoringOtherApps: true)
+        } label: {
+            HStack {
+                Label(
+                    L10n.format("updates.available_format", release.version),
+                    systemImage: "arrow.down.circle.fill"
+                )
+                Spacer()
+                Image(systemName: "chevron.right")
+            }
+            .contentShape(Rectangle())
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(8)
+            .background(.blue.opacity(0.10), in: RoundedRectangle(cornerRadius: 8))
+        }
+        .buttonStyle(.plain)
+        .font(.caption)
+        .foregroundStyle(.blue)
+    }
+
+    private var header: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(L10n.string("app.title"))
+                    .font(.headline)
+
+                Text(service.accountDescription)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            if service.isRefreshInFlight {
+                ProgressView()
+                    .controlSize(.small)
+            }
+
+            Button {
+                service.refresh()
+            } label: {
+                Image(systemName: "arrow.clockwise")
+            }
+            .buttonStyle(.plain)
+            .help(L10n.string("action.refresh"))
+            .disabled(service.isRefreshInFlight)
+        }
+    }
+
+    private var staleBanner: some View {
+        Label(L10n.string("data.stale"), systemImage: "clock.badge.exclamationmark")
+            .font(.caption)
+            .foregroundStyle(.orange)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(8)
+            .background(.orange.opacity(0.10), in: RoundedRectangle(cornerRadius: 8))
+    }
+
+    private var previewModeBanner: some View {
+        HStack(spacing: 8) {
+            Label(
+                L10n.string("developer.preview_mode_active"),
+                systemImage: "eye.trianglebadge.exclamationmark"
+            )
+            .font(.caption)
+            .foregroundStyle(.orange)
+
+            Spacer()
+
+            Button(L10n.string("developer.return_to_live")) {
+                settings.developerPreviewEnabled = false
+            }
+            .buttonStyle(.plain)
+            .font(.caption)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(8)
+        .background(.orange.opacity(0.10), in: RoundedRectangle(cornerRadius: 8))
+    }
+
+    private var loadingView: some View {
+        HStack(spacing: 10) {
+            ProgressView()
+                .controlSize(.small)
+            Text(L10n.string("loading.usage"))
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, minHeight: 90)
+    }
+
+    private func errorView(_ message: String) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label(L10n.string("error.cannot_read"), systemImage: "exclamationmark.triangle")
+                .foregroundStyle(.orange)
+            Text(message)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            Button(L10n.string("action.retry")) {
+                service.refresh()
+            }
+        }
+        .frame(maxWidth: .infinity, minHeight: 90, alignment: .leading)
+    }
+
+    private func inlineErrorView(_ message: String) -> some View {
+        Label(message, systemImage: "exclamationmark.triangle")
+            .font(.caption)
+            .foregroundStyle(.orange)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var visibleQuotaWindows: [CodexUsageWindow] {
+        settings.popoverContent.visibleQuotaWindows(from: service.windows)
+    }
+
+    private var displayedSections: [PopoverContentSection] {
+        settings.popoverContent.sectionOrder.filter { section in
+            guard settings.popoverContent.isSectionVisible(section) else { return false }
+
+            switch section {
+            case .quotaWindows:
+                return !visibleQuotaWindows.isEmpty
+            case .resetCredits:
+                return service.rateLimitResetCredits != nil
+            case .quotaHistory, .tokenActivity:
+                return true
+            }
+        }
+    }
+
+    private var configurableContent: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            ForEach(displayedSections) { section in
+                if section != displayedSections.first {
+                    Divider()
+                }
+
+                popoverSection(section)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private func popoverSection(_ section: PopoverContentSection) -> some View {
+        switch section {
+        case .quotaWindows:
+            usageView
+        case .resetCredits:
+            if let summary = service.rateLimitResetCredits {
+                ResetCreditsSection(
+                    summary: summary,
+                    appearance: settings.developerAppearance
+                )
+            }
+        case .quotaHistory:
+            Button(action: openHistoryWindow) {
+                menuQuotaSection
+            }
+            .buttonStyle(.plain)
+        case .tokenActivity:
+            Button(action: openHistoryWindow) {
+                menuTokenSection
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private var usageView: some View {
+        // Update countdowns and pace locally every minute without another API call.
+        TimelineView(.periodic(from: Date(), by: 60)) { context in
+            VStack(spacing: 16) {
+                ForEach(visibleQuotaWindows) { window in
+                    UsageWindowRow(
+                        window: window,
+                        now: context.date,
+                        appearance: settings.developerAppearance
+                    )
+
+                    if window.id != visibleQuotaWindows.last?.id {
+                        Divider()
+                    }
+                }
+            }
+        }
+    }
+
+    private var menuQuotaSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L10n.string("history.quota.title"))
+                        .font(.subheadline.weight(.semibold))
+                    Text(L10n.string("history.quota.fixed_cycle"))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                if let remaining = menuQuotaRemaining {
+                    VStack(alignment: .trailing, spacing: 1) {
+                        Text("\(remaining)%")
+                            .font(.headline.monospacedDigit())
+                        Text(L10n.string("quota.remaining"))
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+            }
+
+            if let cycle = menuQuotaCycle {
+                QuotaHistoryChart(series: cycle, showsAxes: false)
+                    .frame(height: 92)
+            } else {
+                HStack(spacing: 8) {
+                    Image(systemName: "chart.xyaxis.line")
+                        .foregroundStyle(HistoryPalette.accent)
+                    Text(L10n.string("history.empty.message"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, minHeight: 54, alignment: .leading)
+            }
+        }
+        .contentShape(Rectangle())
+        .padding(.vertical, 2)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var menuTokenSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L10n.string("history.tokens.title"))
+                        .font(.subheadline.weight(.semibold))
+                    Text(TokenActivityRange.month.localizedName)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                if !menuTokenPoints.isEmpty {
+                    VStack(alignment: .trailing, spacing: 1) {
+                        Text(compactToken(menuTokenTotal))
+                            .font(.headline.monospacedDigit())
+                        Text(L10n.string("history.tokens.total"))
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+            }
+
+            if menuTokenPoints.isEmpty {
+                HStack(spacing: 8) {
+                    Image(systemName: "chart.bar.fill")
+                        .foregroundStyle(HistoryPalette.accent)
+                    Text(historySummary)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, minHeight: 54, alignment: .leading)
+            } else {
+                CompactTokenActivityChart(points: menuTokenPoints)
+                    .frame(height: 92)
+            }
+        }
+        .contentShape(Rectangle())
+        .padding(.vertical, 2)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var menuQuotaCycle: QuotaHistorySeries? {
+        let window = QuotaWindowSelection.preferredDefault(from: history.quotaWindows)
+        guard let window else { return nil }
+
+        let samples = history.quotaSamples.filter { $0.windowID == window.id }
+        guard let cycle = QuotaHistorySeries.makeCurrentCycle(
+            samples: samples,
+            window: window,
+            now: Date()
+        ), !cycle.samples.isEmpty else {
+            return nil
+        }
+        return cycle
+    }
+
+    private var menuQuotaRemaining: Int? {
+        menuQuotaCycle?.samples.last?.remainingPercent
+    }
+
+    private func openHistoryWindow() {
+        openWindow(id: CodexMeterWindowID.history)
+        NSApplication.shared.activate(ignoringOtherApps: true)
+    }
+
+    private var menuTokenPoints: [TokenChartPoint] {
+        TokenChartData.filtered(
+            TokenChartData.points(from: history.tokenUsage ?? service.tokenUsage),
+            range: .month,
+            now: Date()
+        )
+    }
+
+    private var menuTokenTotal: Int64 {
+        menuTokenPoints.reduce(0) { partial, point in
+            let (sum, overflow) = partial.addingReportingOverflow(point.tokens)
+            return overflow ? Int64.max : sum
+        }
+    }
+
+    private func compactToken(_ value: Int64) -> String {
+        CompactTokenFormatter.string(value, locale: L10n.locale)
+    }
+
+    private var historySummary: String {
+        if let lifetime = service.tokenUsage?.summary.lifetimeTokens {
+            return L10n.format(
+                "history.summary.tokens_format",
+                CompactTokenFormatter.string(lifetime, locale: L10n.locale)
+            )
+        }
+        return L10n.string("history.summary.local")
+    }
+
+    private var footer: some View {
+        HStack {
+            if let lastUpdated = service.lastUpdated {
+                Text(L10n.format(
+                    "status.updated_at_format",
+                    L10n.formattedTime(lastUpdated, includingSeconds: true)
+                ))
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+            } else {
+                Text(L10n.string("status.local_server"))
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
+
+            Spacer()
+
+            Button(L10n.string("action.quit")) {
+                NSApplication.shared.terminate(nil)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+        }
+    }
+}
+
+private enum PopoverLayoutMetrics {
+    private static let fallbackScreenHeight: CGFloat = 720
+    private static let screenEdgeClearance: CGFloat = 16
+
+    static var initialMaximumHeight: CGFloat {
+        maximumHeight(forScreenVisibleHeight: NSScreen.main?.visibleFrame.height)
+    }
+
+    static func maximumHeight(forScreenVisibleHeight visibleHeight: CGFloat?) -> CGFloat {
+        max(1, (visibleHeight ?? fallbackScreenHeight) - screenEdgeClearance)
+    }
+}
+
+/// Reports the visible height of the display that actually contains the menu
+/// bar popover, including updates after display or scaling changes.
+private struct PopoverScreenHeightReader: NSViewRepresentable {
+    let onVisibleHeightChange: (CGFloat) -> Void
+
+    func makeNSView(context: Context) -> ScreenTrackingView {
+        ScreenTrackingView(onVisibleHeightChange: onVisibleHeightChange)
+    }
+
+    func updateNSView(_ nsView: ScreenTrackingView, context: Context) {
+        nsView.onVisibleHeightChange = onVisibleHeightChange
+        nsView.publishVisibleHeight()
+    }
+
+    final class ScreenTrackingView: NSView {
+        var onVisibleHeightChange: (CGFloat) -> Void
+        private var observers: [NSObjectProtocol] = []
+
+        init(onVisibleHeightChange: @escaping (CGFloat) -> Void) {
+            self.onVisibleHeightChange = onVisibleHeightChange
+            super.init(frame: .zero)
+        }
+
+        @available(*, unavailable)
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+
+        deinit {
+            removeObservers()
+        }
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            installObservers()
+            publishVisibleHeight()
+        }
+
+        func publishVisibleHeight() {
+            guard let visibleHeight = window?.screen?.visibleFrame.height else { return }
+            let callback = onVisibleHeightChange
+            DispatchQueue.main.async {
+                callback(visibleHeight)
+            }
+        }
+
+        private func installObservers() {
+            removeObservers()
+
+            if let window {
+                observers.append(NotificationCenter.default.addObserver(
+                    forName: NSWindow.didChangeScreenNotification,
+                    object: window,
+                    queue: .main
+                ) { [weak self] _ in
+                    self?.publishVisibleHeight()
+                })
+            }
+
+            observers.append(NotificationCenter.default.addObserver(
+                forName: NSApplication.didChangeScreenParametersNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                self?.publishVisibleHeight()
+            })
+        }
+
+        private func removeObservers() {
+            observers.forEach(NotificationCenter.default.removeObserver)
+            observers.removeAll()
+        }
+    }
+}
+
+/// Presents banked reset availability without exposing a redemption action.
+private struct ResetCreditsSection: View {
+    let summary: CodexRateLimitResetCreditsSummary
+    let appearance: MenuBarAppearance
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        TimelineView(.periodic(from: Date(), by: 60)) { context in
+            content(at: context.date)
+        }
+    }
+
+    private func content(at date: Date) -> some View {
+        let usableCredits = summary.usableCredits(at: date)
+
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Label(
+                    L10n.string("reset_credits.title"),
+                    systemImage: "arrow.counterclockwise.circle"
+                )
+                .font(.subheadline.weight(.semibold))
+
+                Spacer()
+
+                Text(countText)
+                    .font(.subheadline.monospacedDigit())
+                    .foregroundStyle(summary.hasAvailableCredits ? .primary : .secondary)
+            }
+
+            ForEach(usableCredits) { credit in
+                resetCreditDetail(credit, at: date)
+            }
+
+            if summary.hasAvailableCredits, usableCredits.isEmpty {
+                Text(L10n.string("reset_credits.details_unavailable"))
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var countText: String {
+        guard summary.hasAvailableCredits else {
+            return L10n.string("reset_credits.none")
+        }
+        return L10n.format("reset_credits.available_format", summary.availableCount)
+    }
+
+    private func resetCreditDetail(
+        _ credit: CodexRateLimitResetCredit,
+        at date: Date
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 5) {
+            if let expiresAt = credit.expiresAt {
+                if let remainingFraction = credit.remainingLifetimeFraction(at: date) {
+                    ProgressView(value: remainingFraction)
+                        .progressViewStyle(.linear)
+                        .tint(lifetimeTint(for: credit, at: date))
+                        // Recreate the native progress control after an
+                        // appearance switch so AppKit keeps the intended tint.
+                        .id(colorScheme)
+                        .accessibilityLabel(L10n.string("reset_credits.title"))
+                        .accessibilityValue(
+                            L10n.format(
+                                "reset_credits.expires_format",
+                                L10n.formattedDateTime(expiresAt)
+                            )
+                        )
+                }
+
+                Label(
+                    L10n.format(
+                        "reset_credits.expires_format",
+                        L10n.formattedDateTime(expiresAt)
+                    ),
+                    systemImage: "clock"
+                )
+            } else {
+                Label(
+                    L10n.string("reset_credits.no_expiration"),
+                    systemImage: "clock"
+                )
+            }
+        }
+        .font(.caption2)
+        .foregroundStyle(.secondary)
+    }
+
+    private func lifetimeTint(
+        for credit: CodexRateLimitResetCredit,
+        at date: Date
+    ) -> Color {
+        switch credit.lifetimeAttentionLevel(at: date) {
+        case .normal, .none:
+            appearance.normalColor.swiftUIColor(for: colorScheme)
+        case .warning:
+            appearance.warningColor.swiftUIColor(for: colorScheme)
+        case .critical:
+            appearance.criticalColor.swiftUIColor(for: colorScheme)
+        }
+    }
+}
+
+/// Opens the shared settings window without expanding the menu bar popover.
+private struct SettingsSection: View {
+    @ObservedObject var service: CodexUsageService
+    @ObservedObject var settings: AppSettings
+    @Environment(\.openWindow) private var openWindow
+
+    var body: some View {
+        Button {
+            openWindow(id: CodexMeterWindowID.settings)
+            NSApplication.shared.activate(ignoringOtherApps: true)
+        } label: {
+            HStack(spacing: 7) {
+                Image(systemName: "gearshape")
+                Text(L10n.string("settings.title"))
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, minHeight: 32, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(L10n.string("settings.title"))
+    }
+}
+
+/// Uses the source metric rows for currency balances and quota previews.
+private struct UsageWindowRow: View {
+    let window: CodexUsageWindow
+    let now: Date
+    let appearance: MenuBarAppearance
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(window.name)
+                    .font(.subheadline.weight(.semibold))
+
+                Spacer()
+
+                paceLabel
+            }
+
+            MetricBar(
+                label: L10n.string(window.balance == nil ? "quota.remaining" : "balance.total"),
+                value: window.balance == nil ? Double(window.remainingPercent) : window.balancePercent,
+                tint: quotaTint,
+                symbol: "battery.75percent",
+                displayValue: window.balance.map { L10n.money($0.totalBalance, currency: $0.currency.rawValue) }
+            )
+
+            MetricBar(
+                label: L10n.string(window.balance == nil ? "time.remaining" : "balance.topped_up"),
+                value: window.balance == nil ? window.remainingTimePercent(at: now) : window.toppedUpPercent,
+                tint: appearance.timeColor.swiftUIColor(for: colorScheme),
+                symbol: "clock",
+                displayValue: window.balance.map { L10n.money($0.toppedUpBalance, currency: $0.currency.rawValue) }
+            )
+
+            HStack {
+                if let balance = window.balance {
+                    Label(
+                        L10n.format("balance.granted_format", L10n.money(balance.grantedBalance, currency: balance.currency.rawValue)),
+                        systemImage: "hourglass"
+                    )
+                } else if let resetsAt = window.resetsAt {
+                    Label(
+                        L10n.format(
+                            "quota.reset_remaining_format",
+                            L10n.remainingDuration(until: resetsAt, from: now)
+                        ),
+                        systemImage: "hourglass"
+                    )
+                } else {
+                    Label(L10n.string("quota.reset_unavailable"), systemImage: "hourglass")
+                }
+
+                Spacer()
+
+                if let balance = window.balance {
+                    Text(balance.currency.rawValue)
+                } else if let resetsAt = window.resetsAt {
+                    Text(L10n.format(
+                        "quota.reset_format",
+                        L10n.formattedDateTime(resetsAt)
+                    ))
+                }
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 4)
+    }
+
+    @ViewBuilder
+    private var paceLabel: some View {
+        if window.balance != nil {
+            if window.balanceAvailable == true {
+                Label(L10n.string("status.available"), systemImage: "checkmark.circle.fill")
+                    .foregroundStyle(.green)
+            } else {
+                Label(L10n.string("status.unavailable"), systemImage: "exclamationmark.triangle.fill")
+                    .foregroundStyle(.orange)
+            }
+        } else {
+        switch window.pace(at: now) {
+        case .onTrack:
+            Label(L10n.string("pace.on_track"), systemImage: "checkmark.circle.fill")
+                .foregroundStyle(.green)
+                .help(paceHelpText)
+        case .overPace:
+            Label(L10n.string("pace.over"), systemImage: "exclamationmark.triangle.fill")
+                .foregroundStyle(.orange)
+                .help(paceHelpText)
+        case .unavailable:
+            Label(L10n.string("pace.unavailable"), systemImage: "questionmark.circle")
+                .foregroundStyle(.secondary)
+                .help(L10n.string("pace.unavailable_help"))
+        }
+        }
+    }
+
+    private var paceHelpText: String {
+        guard let delta = window.paceDelta(at: now) else {
+            return L10n.string("pace.unavailable_help")
+        }
+        return L10n.format("pace.delta_format", delta)
+    }
+
+    private var quotaTint: Color {
+        switch window.attentionLevel(at: now) {
+        case .normal: appearance.normalColor.swiftUIColor(for: colorScheme)
+        case .warning: appearance.warningColor.swiftUIColor(for: colorScheme)
+        case .critical: appearance.criticalColor.swiftUIColor(for: colorScheme)
+        }
+    }
+}
+
+private struct MetricBar: View {
+    let label: String
+    let value: Double?
+    let tint: Color
+    let symbol: String
+    var displayValue: String? = nil
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        VStack(spacing: 5) {
+            HStack {
+                Label(label, systemImage: symbol)
+                Spacer()
+                Text(displayValue ?? value.map { "\(Int($0.rounded()))%" } ?? "—")
+                    .monospacedDigit()
+            }
+            .font(.caption)
+
+            ProgressView(value: value ?? 0, total: 100)
+                .tint(tint)
+                // AppKit reuses this native control across appearance changes
+                // and can reset its tint. Recreate it so SwiftUI reapplies tint.
+                .id(colorScheme)
+                .opacity(value == nil ? 0.25 : 1)
+        }
+        .accessibilityElement(children: .combine)
+    }
+}

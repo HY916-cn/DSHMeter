@@ -66,7 +66,7 @@ struct MenuBarAppearance: Codable, Equatable {
     var trackOpacity = 0.22
     var indicatorTextSpacing = 2.0
     var horizontalPadding = 1.0
-    var textWidth = 56.0
+    var textWidth = 40.0
     var barWidth = 26.0
     var barHeight = 3.0
 

@@ -1,29 +1,8 @@
 import AppKit
 import Combine
-import DSHMeterCore
 import Foundation
 import ServiceManagement
 import SwiftUI
-
-enum AppLanguage: String, CaseIterable, Identifiable {
-    case system, en, zhHans = "zh-Hans", zhHant = "zh-Hant"
-    var id: String { rawValue }
-    var localizedName: String { title }
-    var title: String {
-        switch self {
-        case .system: return L10n.string("language.system")
-        case .en: return "English"
-        case .zhHans: return "简体中文"
-        case .zhHant: return "繁體中文"
-        }
-    }
-}
-
-enum AppAppearance: String, CaseIterable, Identifiable {
-    case system, light, dark
-    var id: String { rawValue }
-    var colorScheme: ColorScheme? { self == .system ? nil : (self == .light ? .light : .dark) }
-}
 
 enum AppAppearanceMode: String, CaseIterable, Identifiable {
     case system
@@ -52,6 +31,34 @@ enum AppAppearanceMode: String, CaseIterable, Identifiable {
 
     var localizedName: String {
         L10n.string("settings.appearance.\(rawValue)")
+    }
+}
+
+enum AppLanguage: String, CaseIterable, Identifiable {
+    case system
+    case english
+    case simplifiedChinese
+    case traditionalChinese
+
+    var id: String { rawValue }
+
+    /// A nil code keeps Foundation and the String Catalog on the system language.
+    var languageCode: String? {
+        switch self {
+        case .system: nil
+        case .english: "en"
+        case .simplifiedChinese: "zh-Hans"
+        case .traditionalChinese: "zh-Hant"
+        }
+    }
+
+    var localizedName: String {
+        switch self {
+        case .system: L10n.string("settings.language.system")
+        case .english: L10n.string("settings.language.english")
+        case .simplifiedChinese: L10n.string("settings.language.simplified_chinese")
+        case .traditionalChinese: L10n.string("settings.language.traditional_chinese")
+        }
     }
 }
 
@@ -104,38 +111,67 @@ extension DeveloperPreviewPreset {
     }
 }
 
+extension HistoryRetention {
+    var localizedName: String {
+        L10n.string("history.retention.\(rawValue)")
+    }
+}
+
+extension TokenActivityRange {
+    var localizedName: String {
+        L10n.string("history.range.\(rawValue)")
+    }
+}
+
+extension QuotaHistoryRange {
+    var localizedName: String {
+        L10n.string("history.quota.range.\(rawValue)")
+    }
+}
+
+extension QuotaHistoryMode {
+    var localizedName: String {
+        historyRange?.localizedName ?? L10n.string("history.quota.mode.browse")
+    }
+}
+
+extension QuotaCalendarPeriod {
+    var localizedName: String {
+        L10n.string("history.quota.calendar.\(rawValue)")
+    }
+}
+
 extension PopoverContentSection {
     var localizedName: String {
         L10n.string("settings.popover.section.\(rawValue)")
     }
 }
 
-enum BundleInfo {
-    static var version: String { Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.1.3" }
-    static var build: String { Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "4" }
-}
-
-@MainActor
+/// Persists user preferences and bridges settings that are owned by macOS.
 final class AppSettings: ObservableObject {
-    @Published var homePath: String { didSet { defaults.set(homePath, forKey: "dsh.home") } }
-    @Published var language: AppLanguage {
-        didSet { defaults.set(language.rawValue, forKey: "language"); L10n.language = language }
+    @Published var homePath: String {
+        didSet { defaults.set(homePath, forKey: "dsh.home") }
     }
-    @Published var appearance: AppAppearance { didSet { defaults.set(appearance.rawValue, forKey: "appearance") } }
-    @Published var preferredCurrency: String { didSet { defaults.set(preferredCurrency, forKey: "balance.currency") } }
-    @Published var referenceBalances: [String: String] = [:] {
+
+    @Published var preferredCurrency: String {
+        didSet { defaults.set(preferredCurrency, forKey: "balance.currency") }
+    }
+
+    @Published var referenceBalances: [String: String] {
         didSet { defaults.set(referenceBalances, forKey: "balance.references") }
     }
-    @Published var launchAtLogin = false
-    @Published var settingsError: String?
-    @Published var settingsDestination: SettingsDestination?
 
-    var appearanceMode: AppAppearanceMode {
-        get { AppAppearanceMode(rawValue: appearance.rawValue) ?? .system }
-        set { appearance = AppAppearance(rawValue: newValue.rawValue) ?? .system }
+    @Published var appearanceMode: AppAppearanceMode {
+        didSet { defaults.set(appearanceMode.rawValue, forKey: Keys.appearanceMode) }
     }
 
-    var launchAtLoginEnabled: Bool { launchAtLogin }
+    @Published var language: AppLanguage {
+        didSet {
+            defaults.set(language.rawValue, forKey: Keys.language)
+            L10n.setLanguage(language.languageCode)
+            updatePushCredentialError()
+        }
+    }
 
     @Published var menuBarStyle: MenuBarDisplayStyle {
         didSet { defaults.set(menuBarStyle.rawValue, forKey: Keys.menuBarStyle) }
@@ -152,6 +188,84 @@ final class AppSettings: ObservableObject {
                 defaults.set(data, forKey: Keys.popoverContent)
             }
         }
+    }
+
+    @Published var notificationsEnabled: Bool {
+        didSet { defaults.set(notificationsEnabled, forKey: Keys.notificationsEnabled) }
+    }
+
+    @Published var notificationThreshold: Int {
+        didSet { defaults.set(notificationThreshold, forKey: Keys.notificationThreshold) }
+    }
+
+    @Published var barkEnabled: Bool {
+        didSet { defaults.set(barkEnabled, forKey: Keys.barkEnabled) }
+    }
+
+    @Published var barkServerURL: String {
+        didSet { defaults.set(barkServerURL, forKey: Keys.barkServerURL) }
+    }
+
+    @Published var barkDeviceKey: String {
+        didSet { persistPushCredential(barkDeviceKey, for: .barkDeviceKey) }
+    }
+
+    @Published var barkIconURL: String {
+        didSet { defaults.set(barkIconURL, forKey: Keys.barkIconURL) }
+    }
+
+    @Published var gotifyEnabled: Bool {
+        didSet { defaults.set(gotifyEnabled, forKey: Keys.gotifyEnabled) }
+    }
+
+    @Published var gotifyServerURL: String {
+        didSet { defaults.set(gotifyServerURL, forKey: Keys.gotifyServerURL) }
+    }
+
+    @Published var gotifyAppToken: String {
+        didSet { persistPushCredential(gotifyAppToken, for: .gotifyAppToken) }
+    }
+
+    @Published var gotifyPriority: Int {
+        didSet { defaults.set(gotifyPriority, forKey: Keys.gotifyPriority) }
+    }
+
+    @Published var telegramEnabled: Bool {
+        didSet { defaults.set(telegramEnabled, forKey: Keys.telegramEnabled) }
+    }
+
+    @Published var telegramBotToken: String {
+        didSet { persistPushCredential(telegramBotToken, for: .telegramBotToken) }
+    }
+
+    @Published var telegramChatID: String {
+        didSet { defaults.set(telegramChatID, forKey: Keys.telegramChatID) }
+    }
+
+    @Published var discordEnabled: Bool {
+        didSet { defaults.set(discordEnabled, forKey: Keys.discordEnabled) }
+    }
+
+    @Published var discordWebhookURL: String {
+        didSet { persistPushCredential(discordWebhookURL, for: .discordWebhookURL) }
+    }
+
+    @Published private(set) var pushCredentialError: String?
+
+    @Published var pushFiveHourResetEnabled: Bool {
+        didSet { defaults.set(pushFiveHourResetEnabled, forKey: Keys.pushFiveHourResetEnabled) }
+    }
+
+    @Published var pushWeeklyResetEnabled: Bool {
+        didSet { defaults.set(pushWeeklyResetEnabled, forKey: Keys.pushWeeklyResetEnabled) }
+    }
+
+    @Published var historyRetention: HistoryRetention {
+        didSet { defaults.set(historyRetention.rawValue, forKey: Keys.historyRetention) }
+    }
+
+    @Published var includePrereleaseUpdates: Bool {
+        didSet { defaults.set(includePrereleaseUpdates, forKey: Keys.includePrereleaseUpdates) }
     }
 
     @Published var developerAppearance: MenuBarAppearance {
@@ -193,38 +307,93 @@ final class AppSettings: ObservableObject {
         }
     }
 
+    @Published private(set) var launchAtLoginEnabled = false
+    @Published var settingsError: String?
+    @Published var settingsDestination: SettingsDestination?
+
+    let historyIdentitySalt: String
+
     private let defaults: UserDefaults
+    private let pushCredentials: PushCredentialStore
+    private var failedPushCredentials = Set<PushCredential>()
 
     private enum Keys {
-        static let menuBarStyle = "menu.style"
+        static let appearanceMode = "appearanceMode"
+        static let language = "language"
+        static let menuBarStyle = "menuBarStyle"
         static let popoverContent = "popover.contentConfiguration"
+        static let notificationsEnabled = "notificationsEnabled"
+        static let notificationThreshold = "notificationThreshold"
+        static let barkEnabled = "push.barkEnabled"
+        static let barkServerURL = "push.barkServerURL"
+        static let barkIconURL = "push.barkIconURL"
+        static let gotifyEnabled = "push.gotifyEnabled"
+        static let gotifyServerURL = "push.gotifyServerURL"
+        static let gotifyPriority = "push.gotifyPriority"
+        static let telegramEnabled = "push.telegramEnabled"
+        static let telegramChatID = "push.telegramChatID"
+        static let discordEnabled = "push.discordEnabled"
+        static let pushFiveHourResetEnabled = "push.fiveHourResetEnabled"
+        static let pushWeeklyResetEnabled = "push.weeklyResetEnabled"
+        static let historyRetention = "history.retention"
+        static let includePrereleaseUpdates = "updates.includePrereleases"
         static let developerAppearance = "developer.appearance"
         static let developerAppearanceDefaultsVersion = "developer.appearanceDefaultsVersion"
         static let developerPreviewEnabled = "developer.previewEnabled"
         static let developerPreviewPreset = "developer.previewPreset"
         static let developerPreviewRemainingPercent = "developer.previewRemainingPercent"
         static let developerPreviewRemainingTimePercent = "developer.previewRemainingTimePercent"
+        static let historyIdentitySalt = "history.identitySalt"
     }
 
-    init(defaults: UserDefaults = .standard) {
+    init(
+        defaults: UserDefaults = .standard,
+        credentialBackend: any PushCredentialBackend = KeychainPushCredentialBackend()
+    ) {
         self.defaults = defaults
-        homePath = defaults.string(forKey: "dsh.home") ?? ProcessInfo.processInfo.environment["DSH_HOME"]
+        homePath = defaults.string(forKey: "dsh.home")
+            ?? ProcessInfo.processInfo.environment["DSH_HOME"]
             ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".dsh").path
-        language = AppLanguage(rawValue: defaults.string(forKey: "language") ?? "system") ?? .system
-        appearance = AppAppearance(rawValue: defaults.string(forKey: "appearance") ?? "system") ?? .system
         preferredCurrency = defaults.string(forKey: "balance.currency") ?? "CNY"
         referenceBalances = defaults.dictionary(forKey: "balance.references") as? [String: String] ?? [:]
-        let legacyStyleNames = [
+        let credentialStore = PushCredentialStore(defaults: defaults, backend: credentialBackend)
+        self.pushCredentials = credentialStore
+        let loadedCredentials = Dictionary(uniqueKeysWithValues: PushCredential.allCases.map {
+            ($0, credentialStore.load($0))
+        })
+        if let storedSalt = defaults.string(forKey: Keys.historyIdentitySalt),
+           !storedSalt.isEmpty {
+            historyIdentitySalt = storedSalt
+        } else {
+            let newSalt = UUID().uuidString
+            defaults.set(newSalt, forKey: Keys.historyIdentitySalt)
+            historyIdentitySalt = newSalt
+        }
+        appearanceMode = AppAppearanceMode(
+            rawValue: defaults.string(forKey: Keys.appearanceMode)
+                ?? defaults.string(forKey: "appearance") ?? ""
+        ) ?? .system
+        let storedLanguage = defaults.string(forKey: Keys.language) ?? ""
+        let legacyLanguages = [
+            "en": AppLanguage.english,
+            "zh-Hans": .simplifiedChinese,
+            "zh-Hant": .traditionalChinese
+        ]
+        language = AppLanguage(
+            rawValue: storedLanguage
+        ) ?? legacyLanguages[storedLanguage] ?? .system
+        let storedStyle = defaults.string(forKey: Keys.menuBarStyle)
+            ?? defaults.string(forKey: "menu.style") ?? ""
+        let legacyStyles = [
             "iconAndBalance": MenuBarDisplayStyle.progressAndPercentage,
             "balanceOnly": .percentageOnly,
             "iconOnly": .progressOnly,
             "horizontalBarBesideBalance": .horizontalBarBesidePercentage,
-            "compactBarBelowBalance": .compactBarBelowPercentage,
-            "dualBars": .dualBars
+            "compactBarBelowBalance": .compactBarBelowPercentage
         ]
-        let storedStyle = defaults.string(forKey: Keys.menuBarStyle) ?? ""
-        menuBarStyle = MenuBarDisplayStyle(rawValue: storedStyle)
-            ?? legacyStyleNames[storedStyle] ?? .progressAndPercentage
+        menuBarStyle = MenuBarDisplayStyle(
+            rawValue: storedStyle
+        ) ?? legacyStyles[storedStyle] ?? .progressAndPercentage
         if let data = defaults.data(forKey: Keys.popoverContent),
            let decoded = try? JSONDecoder().decode(
                PopoverContentConfiguration.self,
@@ -234,6 +403,37 @@ final class AppSettings: ObservableObject {
         } else {
             popoverContent = .defaultValue
         }
+        notificationsEnabled = defaults.bool(forKey: Keys.notificationsEnabled)
+        let storedThreshold = defaults.integer(forKey: Keys.notificationThreshold)
+        notificationThreshold = storedThreshold == 0 ? 20 : storedThreshold
+        if defaults.object(forKey: Keys.pushFiveHourResetEnabled) != nil {
+            pushFiveHourResetEnabled = defaults.bool(forKey: Keys.pushFiveHourResetEnabled)
+        } else {
+            pushFiveHourResetEnabled = true
+        }
+        if defaults.object(forKey: Keys.pushWeeklyResetEnabled) != nil {
+            pushWeeklyResetEnabled = defaults.bool(forKey: Keys.pushWeeklyResetEnabled)
+        } else {
+            pushWeeklyResetEnabled = true
+        }
+        barkEnabled = defaults.bool(forKey: Keys.barkEnabled)
+        barkServerURL = defaults.string(forKey: Keys.barkServerURL) ?? "https://api.day.app"
+        barkDeviceKey = loadedCredentials[.barkDeviceKey]?.value ?? ""
+        barkIconURL = defaults.string(forKey: Keys.barkIconURL) ?? ""
+        gotifyEnabled = defaults.bool(forKey: Keys.gotifyEnabled)
+        gotifyServerURL = defaults.string(forKey: Keys.gotifyServerURL) ?? ""
+        gotifyAppToken = loadedCredentials[.gotifyAppToken]?.value ?? ""
+        let storedGotifyPriority = defaults.integer(forKey: Keys.gotifyPriority)
+        gotifyPriority = storedGotifyPriority == 0 ? 5 : storedGotifyPriority
+        telegramEnabled = defaults.bool(forKey: Keys.telegramEnabled)
+        telegramBotToken = loadedCredentials[.telegramBotToken]?.value ?? ""
+        telegramChatID = defaults.string(forKey: Keys.telegramChatID) ?? ""
+        discordEnabled = defaults.bool(forKey: Keys.discordEnabled)
+        discordWebhookURL = loadedCredentials[.discordWebhookURL]?.value ?? ""
+        historyRetention = HistoryRetention(
+            rawValue: defaults.string(forKey: Keys.historyRetention) ?? ""
+        ) ?? .forever
+        includePrereleaseUpdates = defaults.bool(forKey: Keys.includePrereleaseUpdates)
         let appearanceDefaultsVersion = defaults.integer(
             forKey: Keys.developerAppearanceDefaultsVersion
         )
@@ -246,17 +446,22 @@ final class AppSettings: ObservableObject {
             if appearanceDefaultsVersion < 2 {
                 migrated = migrated.migratingLegacyTimeColor()
             }
+            if appearanceDefaultsVersion < 3 {
+                var previousDefault = MenuBarAppearance.acceptedV1
+                previousDefault.textWidth = 56
+                if migrated == previousDefault { migrated = .acceptedV1 }
+            }
             let normalized = migrated.normalized()
             developerAppearance = normalized
 
-            if appearanceDefaultsVersion < 2,
+            if appearanceDefaultsVersion < 3,
                let migratedData = try? JSONEncoder().encode(normalized) {
                 defaults.set(migratedData, forKey: Keys.developerAppearance)
             }
         } else {
             developerAppearance = .acceptedV1
         }
-        defaults.set(2, forKey: Keys.developerAppearanceDefaultsVersion)
+        defaults.set(3, forKey: Keys.developerAppearanceDefaultsVersion)
         developerPreviewEnabled = defaults.bool(forKey: Keys.developerPreviewEnabled)
         developerPreviewPreset = DeveloperPreviewPreset(
             rawValue: defaults.string(forKey: Keys.developerPreviewPreset) ?? ""
@@ -271,28 +476,25 @@ final class AppSettings: ObservableObject {
             key: Keys.developerPreviewRemainingTimePercent,
             fallback: 55
         )
-        L10n.language = language
+        L10n.setLanguage(language.languageCode)
+        failedPushCredentials = Set(loadedCredentials.compactMap { $0.value.failed ? $0.key : nil })
+        updatePushCredentialError()
         refreshLaunchAtLoginStatus()
     }
 
-    var homeURL: URL {
-        URL(fileURLWithPath: NSString(string: homePath).expandingTildeInPath, isDirectory: true)
+    private func persistPushCredential(_ value: String, for credential: PushCredential) {
+        do {
+            try pushCredentials.save(value, for: credential)
+            failedPushCredentials.remove(credential)
+        } catch {
+            failedPushCredentials.insert(credential)
+        }
+        updatePushCredentialError()
     }
 
-    func refreshLoginStatus() { refreshLaunchAtLoginStatus() }
-
-    func referenceBalance(for currency: String) -> Decimal? {
-        let text = (referenceBalances[currency] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        guard text.utf8.count <= 40,
-              text.range(of: #"\A[0-9]+(?:\.[0-9]+)?\z"#, options: .regularExpression) != nil,
-              let amount = Decimal(string: text, locale: Locale(identifier: "en_US_POSIX")),
-              !amount.isNaN, amount > 0 else { return nil }
-        return amount
-    }
-
-    func balanceDisplayStyle(for currency: String) -> MenuBarDisplayStyle {
-        guard referenceBalance(for: currency) != nil else { return .percentageOnly }
-        return menuBarStyle == .dualBars ? .horizontalBarBesidePercentage : menuBarStyle
+    private func updatePushCredentialError() {
+        pushCredentialError = failedPushCredentials.isEmpty
+            ? nil : L10n.string("settings.push.credentials_error")
     }
 
     func resetDeveloperOptions() {
@@ -310,7 +512,7 @@ final class AppSettings: ObservableObject {
         popoverContent = updated
     }
 
-    func setQuotaWindow(_ window: BalanceInfo, visible: Bool) {
+    func setQuotaWindow(_ window: CodexUsageWindow, visible: Bool) {
         var updated = popoverContent
         updated.setQuotaWindow(window, visible: visible)
         popoverContent = updated
@@ -442,7 +644,7 @@ final class AppSettings: ObservableObject {
     func refreshLaunchAtLoginStatus() {
         let status = SMAppService.mainApp.status
         // Keep the toggle on when registration exists but awaits system approval.
-        launchAtLogin = status == .enabled || status == .requiresApproval
+        launchAtLoginEnabled = status == .enabled || status == .requiresApproval
     }
 
     private static func storedPreviewPercent(
@@ -464,58 +666,4 @@ private extension Double {
 private struct DeveloperAppearanceExport: Codable {
     let menuBarStyle: MenuBarDisplayStyle
     let appearance: MenuBarAppearance
-}
-
-enum L10n {
-    static var language = AppLanguage.system
-    static var locale: Locale { Locale(identifier: code ?? Locale.current.identifier) }
-    private static var code: String? {
-        guard language != .system else { return nil }
-        return language.rawValue
-    }
-    static func string(_ key: String) -> String {
-        let bundle = code.flatMap { Bundle.main.path(forResource: $0, ofType: "lproj") }
-            .flatMap(Bundle.init(path:)) ?? Bundle.main
-        return NSLocalizedString(key, bundle: bundle, value: key, comment: "")
-    }
-    static func format(_ key: String, _ arguments: CVarArg...) -> String {
-        String(format: string(key), locale: locale, arguments: arguments)
-    }
-    static func money(_ amount: Decimal, currency: String) -> String {
-        let formatter = NumberFormatter()
-        formatter.locale = locale
-        formatter.numberStyle = .currency
-        formatter.currencyCode = currency
-        formatter.currencySymbol = currency == "CNY" ? "¥" : "$"
-        formatter.minimumFractionDigits = 2
-        formatter.maximumFractionDigits = amount != 0 && abs(NSDecimalNumber(decimal: amount).doubleValue) < 0.01 ? 4 : 2
-        return formatter.string(from: NSDecimalNumber(decimal: amount)) ?? "—"
-    }
-    static func time(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = locale
-        formatter.dateStyle = .none
-        formatter.timeStyle = .medium
-        return formatter.string(from: date)
-    }
-    static func formattedDateTime(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = locale
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .short
-        return formatter.string(from: date)
-    }
-    static func menuMoney(_ amount: Decimal, currency: String) -> String {
-        let magnitude = abs(NSDecimalNumber(decimal: amount).doubleValue)
-        let divisor: Decimal = magnitude >= 1_000_000 ? 1_000_000 : (magnitude >= 1_000 ? 1_000 : 1)
-        let suffix = magnitude >= 1_000_000 ? "M" : (magnitude >= 1_000 ? "K" : "")
-        let formatter = NumberFormatter()
-        formatter.locale = locale
-        formatter.numberStyle = .decimal
-        formatter.usesGroupingSeparator = false
-        formatter.minimumFractionDigits = suffix.isEmpty ? 2 : 0
-        formatter.maximumFractionDigits = suffix.isEmpty && magnitude < 0.01 && magnitude > 0 ? 4 : 2
-        let value = formatter.string(from: NSDecimalNumber(decimal: amount / divisor)) ?? "—"
-        return (currency == "CNY" ? "¥" : "$") + value + suffix
-    }
 }
