@@ -1,6 +1,6 @@
 # DSHMeter development guide
 
-Native macOS 13+ menu bar balance monitor. Version 0.1.6, build 7.
+Native macOS 13+ menu bar balance monitor. Version 0.1.7, build 8.
 Bundle: `com.huang.DSHMeter`. Remote: `HY916-cn/DSHMeter`.
 
 ## UI source
@@ -16,15 +16,17 @@ Command Line Tools that do not ship the SDK 27 State macro plugin.
 
 - Keep the 380-point popover, original scroll behavior and fixed header/footer.
 - Settings preserve all six upstream categories and their original native forms.
-- Balance metric rows reuse MetricBar and UsageWindowRow. Total and topped-up
-  amounts occupy the original metric values; granted balance occupies the footer.
-- A balance percentage requires an explicit positive reference. Unknown values
-  remain unknown. The blue metric bar shows topped-up / total composition.
+- Balance details use compact MetricRow and UsageWindowRow amount lines. Total
+  and topped-up amounts use caption-sized labels and monospaced values; granted
+  balance occupies the footer.
+- Optional menu bar balance percentages require an explicit positive reference.
+  Unknown values remain unknown.
 - Balance history retains the upstream empty state when the source lacks data.
   Popover sections are balance details, reset credits, and balance history. Decode
   stored section IDs as strings and preserve recognized preferences.
-- The balance-only menu bar style draws a single line at a minimum of 14 points
-  with measured text width. Other styles retain their upstream caption rendering.
+- The balance-only menu bar style draws a single line using the configured menu
+  bar font size (10.5 points by default) with measured text width. Other styles
+  retain their upstream caption rendering.
 - CodexUsageService is a UI contract adapter over BalanceService. It never starts
   Codex. Its history identity is salted and partitioned by credential and DSH home;
   reference changes use a separate history window identity.

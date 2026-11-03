@@ -312,8 +312,7 @@ struct ContentView: View {
                 ForEach(visibleQuotaWindows) { window in
                     UsageWindowRow(
                         window: window,
-                        now: context.date,
-                        appearance: settings.developerAppearance
+                        now: context.date
                     )
 
                     if window.id != visibleQuotaWindows.last?.id {
@@ -645,8 +644,6 @@ private struct SettingsSection: View {
 private struct UsageWindowRow: View {
     let window: CodexUsageWindow
     let now: Date
-    let appearance: MenuBarAppearance
-    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -659,20 +656,18 @@ private struct UsageWindowRow: View {
                 paceLabel
             }
 
-            MetricBar(
+            MetricRow(
                 label: L10n.string(window.balance == nil ? "quota.remaining" : "balance.total"),
-                value: window.balance == nil ? Double(window.remainingPercent) : window.balancePercent,
-                tint: quotaTint,
-                symbol: "battery.75percent",
-                displayValue: window.balance.map { L10n.money($0.totalBalance, currency: $0.currency.rawValue) }
+                value: window.balance.map { L10n.money($0.totalBalance, currency: $0.currency.rawValue) }
+                    ?? "\(window.remainingPercent)%",
+                symbol: "battery.75percent"
             )
 
-            MetricBar(
+            MetricRow(
                 label: L10n.string(window.balance == nil ? "time.remaining" : "balance.topped_up"),
-                value: window.balance == nil ? window.remainingTimePercent(at: now) : window.toppedUpPercent,
-                tint: appearance.timeColor.swiftUIColor(for: colorScheme),
-                symbol: "clock",
-                displayValue: window.balance.map { L10n.money($0.toppedUpBalance, currency: $0.currency.rawValue) }
+                value: window.balance.map { L10n.money($0.toppedUpBalance, currency: $0.currency.rawValue) }
+                    ?? window.remainingTimePercent(at: now).map { "\(Int($0.rounded()))%" } ?? "—",
+                symbol: "clock"
             )
 
             HStack {
@@ -745,40 +740,21 @@ private struct UsageWindowRow: View {
         return L10n.format("pace.delta_format", delta)
     }
 
-    private var quotaTint: Color {
-        switch window.attentionLevel(at: now) {
-        case .normal: appearance.normalColor.swiftUIColor(for: colorScheme)
-        case .warning: appearance.warningColor.swiftUIColor(for: colorScheme)
-        case .critical: appearance.criticalColor.swiftUIColor(for: colorScheme)
-        }
-    }
 }
 
-private struct MetricBar: View {
+private struct MetricRow: View {
     let label: String
-    let value: Double?
-    let tint: Color
+    let value: String
     let symbol: String
-    var displayValue: String? = nil
-    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        VStack(spacing: 5) {
-            HStack {
-                Label(label, systemImage: symbol)
-                Spacer()
-                Text(displayValue ?? value.map { "\(Int($0.rounded()))%" } ?? "—")
-                    .monospacedDigit()
-            }
-            .font(.caption)
-
-            ProgressView(value: value ?? 0, total: 100)
-                .tint(tint)
-                // AppKit reuses this native control across appearance changes
-                // and can reset its tint. Recreate it so SwiftUI reapplies tint.
-                .id(colorScheme)
-                .opacity(value == nil ? 0.25 : 1)
+        HStack {
+            Label(label, systemImage: symbol)
+            Spacer()
+            Text(value)
+                .monospacedDigit()
         }
+        .font(.caption)
         .accessibilityElement(children: .combine)
     }
 }

@@ -105,14 +105,8 @@ struct MenuBarProgressView: View {
         return CGFloat(normalizedAppearance.staleIndicatorSize + 3)
     }
 
-    private var balanceOnlyAppearance: MenuBarAppearance {
-        var result = normalizedAppearance
-        result.percentageFontSize = max(14, result.percentageFontSize)
-        return result
-    }
-
     private var balanceOnlyTextWidth: CGFloat {
-        let appearance = balanceOnlyAppearance
+        let appearance = normalizedAppearance
         let font = NSFont.monospacedDigitSystemFont(
             ofSize: appearance.percentageFontSize,
             weight: appearance.percentageFontWeight.nsWeight
@@ -279,7 +273,7 @@ struct MenuBarProgressView: View {
                         width: balanceOnlyTextWidth,
                         height: rect.height
                     ),
-                    appearance: balanceOnlyAppearance
+                    appearance: appearance
                 )
 
             case .progressOnly:

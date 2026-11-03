@@ -30,11 +30,6 @@ struct CodexUsageWindow: Identifiable, Equatable, Sendable {
         return Self.displayPercent(balance.totalBalance / reference)
     }
 
-    var toppedUpPercent: Double? {
-        guard let balance, balance.totalBalance > 0 else { return nil }
-        return Self.displayPercent(balance.toppedUpBalance / balance.totalBalance)
-    }
-
     private static func displayPercent(_ fraction: Decimal) -> Double? {
         let value = NSDecimalNumber(decimal: fraction).doubleValue * 100
         guard value.isFinite else { return nil }
