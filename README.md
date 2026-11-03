@@ -2,13 +2,13 @@
 
 原生 macOS 菜单栏余额工具，自动复用 **DeepSeek Harness（DSH）已配置的 DeepSeek API Key**，显示 API 账户余额。
 
-沿用 [CodexMeter](https://github.com/raycalrui/CodexMeter) 与 [ClaudeMeter](https://github.com/HY916-cn/ClaudeMeter) 的菜单栏弹窗布局：380 点宽度、原生字体、分隔线、刷新按钮、设置入口及更新时间。DSHMeter 是独立社区项目，采用 MIT 许可。
+沿用 [CodexMeter](https://github.com/raycalrui/CodexMeter) 与 [ClaudeMeter](https://github.com/HY916-cn/ClaudeMeter) 的菜单栏弹窗布局：380 点宽度、紧凑指标行、白蓝进度条、双环及两行菜单栏文字、分隔线、刷新按钮、设置入口及更新时间。设置窗口沿用原项目的侧边栏尺寸和原生分组。DSHMeter 是独立社区项目，采用 MIT 许可。
 
 ## 下载与安装
 
 系统要求：macOS 13 或更新版本。当前预编译包适用于 Apple Silicon（M 系列芯片）。
 
-1. 前往 [Releases](https://github.com/HY916-cn/DSHMeter/releases) 下载 `DSHMeter-0.1.0-macOS-arm64.zip`。
+1. 前往 [Releases](https://github.com/HY916-cn/DSHMeter/releases) 下载 `DSHMeter-0.1.1-macOS-arm64.zip`。
 2. 解压，将 `DSHMeter.app` 拖入“应用程序”文件夹。
 3. 打开应用，点击菜单栏的银行卡图标或余额金额。
 
@@ -21,7 +21,7 @@
 >
 > **请先确认 DSH → 设置 → 模型中的 DeepSeek 官方 API 已配置并保存 API Key。仅安装 DSH 或登录 DSH 账户，可能尚未配置 API Key。**
 >
-> 默认读取 `~/.dsh/.credentials.yaml` 的 `refs.DEEPSEEK_API_KEY`。使用自定义 DSH 目录时，请在 DSHMeter 的“设置 → 通用 → DSH 目录”中选择该目录，然后点击“应用并刷新”。选择的是包含凭据文件的文件夹。
+> 默认读取 `~/.dsh/.credentials.yaml` 的 `refs.DEEPSEEK_API_KEY`。使用自定义 DSH 目录时，请在 DSHMeter 的“设置 → 账户 → DSH 目录”中选择该目录，然后点击“应用并刷新”。选择的是包含凭据文件的文件夹。
 
 ### 1. 在 DSH 确认凭据
 
@@ -38,6 +38,8 @@
 - 充值余额；
 - DeepSeek 返回的 API 可用状态；
 - 上次成功更新时间。
+
+充值与赠送余额采用原项目的白蓝指标条显示，占比以当前总余额为分母。菜单栏保留双环、双横条、紧凑横条和金额等六种显示方式；双环外圈表示充值占比，内圈表示赠送占比。
 
 接口返回多个币种时分别显示，可在弹窗或设置中选择优先币种。金额按原币种显示。
 

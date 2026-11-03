@@ -25,7 +25,13 @@ enum AppAppearance: String, CaseIterable, Identifiable {
 
 enum MenuBarStyle: String, CaseIterable, Identifiable {
     case iconAndBalance, balanceOnly, iconOnly
+    case horizontalBarBesideBalance, compactBarBelowBalance, dualBars
     var id: String { rawValue }
+}
+
+enum BundleInfo {
+    static var version: String { Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.1.1" }
+    static var build: String { Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "2" }
 }
 
 @MainActor

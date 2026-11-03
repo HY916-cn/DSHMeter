@@ -19,16 +19,10 @@ struct DSHMeterApp: App {
             BalancePopover(service: service, settings: settings)
                 .appAppearance(settings.appearance)
         } label: {
-            HStack(spacing: 4) {
-                if settings.menuBarStyle != .balanceOnly {
-                    Image(systemName: service.isStale ? "clock.badge.exclamationmark" : "creditcard")
-                }
-                if settings.menuBarStyle != .iconOnly {
-                    Text(service.menuBarTitle).monospacedDigit()
-                }
-            }
-            .accessibilityLabel("DSHMeter · " + service.menuBarTitle
-                                + (service.isStale ? " · " + L10n.string("data.stale") : ""))
+            MenuBarBalanceView(title: service.menuBarTitle,
+                               toppedUpPercent: service.selectedBalance?.toppedUpPercent,
+                               grantedPercent: service.selectedBalance?.grantedPercent,
+                               isStale: service.isStale, style: settings.menuBarStyle)
         }
         .menuBarExtraStyle(.window)
 
@@ -36,7 +30,7 @@ struct DSHMeterApp: App {
             SettingsView(service: service, settings: settings)
                 .appAppearance(settings.appearance)
         }
-        .defaultSize(width: 720, height: 580)
+        .defaultSize(width: 840, height: 700)
         .windowResizability(.contentMinSize)
     }
 }

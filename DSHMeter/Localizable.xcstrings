@@ -67,6 +67,72 @@
         }
       }
     },
+    "about.license": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "License and credits"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "许可与致谢"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "授權與致謝"
+          }
+        }
+      }
+    },
+    "about.local_data": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Local configuration"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本地配置"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本機設定"
+          }
+        }
+      }
+    },
+    "about.local_data_help": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The DSH folder used to read the saved DeepSeek API Key."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用于读取已保存 DeepSeek API Key 的 DSH 目录。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用於讀取已儲存 DeepSeek API Key 的 DSH 目錄。"
+          }
+        }
+      }
+    },
     "about.privacy": {
       "localizations": {
         "en": {
@@ -107,6 +173,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "僅讀取 DSH 憑據來源中的指定 DeepSeek API Key。金鑰僅保留於記憶體，並透過 HTTPS 傳送至 api.deepseek.com/user/balance。餘額資料保留於記憶體，不發起模型請求、不收集遙測、不存取對話。"
+          }
+        }
+      }
+    },
+    "about.version_format": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version %@ · Build %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "版本 %@ · 构建 %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "版本 %@ · 組建 %@"
           }
         }
       }
@@ -415,6 +503,50 @@
           "stringUnit": {
             "state": "translated",
             "value": "API 可用"
+          }
+        }
+      }
+    },
+    "balance.composition": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Balance composition"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "余额构成"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "餘額組成"
+          }
+        }
+      }
+    },
+    "balance.composition_help": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bars show each source as a share of the current total balance."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "进度条显示充值或赠送余额占当前总余额的比例。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "進度條顯示儲值或贈送餘額占目前總餘額的比例。"
           }
         }
       }
@@ -947,24 +1079,90 @@
         }
       }
     },
-    "menu.iconAndBalance": {
+    "menu.compactBarBelowBalance": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Icon and balance"
+            "value": "Compact bar below balance"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "图标和余额"
+            "value": "余额下方紧凑横条"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "圖示與餘額"
+            "value": "餘額下方緊湊橫條"
+          }
+        }
+      }
+    },
+    "menu.dualBars": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dual bars and balance"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "双横条和余额"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "雙橫條與餘額"
+          }
+        }
+      }
+    },
+    "menu.horizontalBarBesideBalance": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Horizontal bar beside balance"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "横条与余额并排"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "橫條與餘額並排"
+          }
+        }
+      }
+    },
+    "menu.iconAndBalance": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Progress rings and balance"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "进度环和余额"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "進度環與餘額"
           }
         }
       }
@@ -974,19 +1172,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Icon only"
+            "value": "Progress rings only"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "仅图标"
+            "value": "仅进度环"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "僅圖示"
+            "value": "僅進度環"
           }
         }
       }
@@ -1009,6 +1207,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "關於"
+          }
+        }
+      }
+    },
+    "settings.account": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "账户"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "帳戶"
           }
         }
       }
@@ -1277,6 +1497,94 @@
         }
       }
     },
+    "settings.popover.description": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose how balance appears in the menu bar. Rings and bars show the topped-up and granted shares of the current balance."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自定义菜单栏余额的显示方式。进度环和横条表示当前余额中的充值与赠送占比。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自訂選單列餘額的顯示方式。進度環與橫條表示目前餘額中的儲值與贈送占比。"
+          }
+        }
+      }
+    },
+    "settings.popover.menu_bar_ring": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menu bar progress rings"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "菜单栏进度环"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選單列進度環"
+          }
+        }
+      }
+    },
+    "settings.popover.preview": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "预览"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "預覽"
+          }
+        }
+      }
+    },
+    "settings.popover.restore_defaults": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore defaults"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "恢复默认"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "還原預設"
+          }
+        }
+      }
+    },
     "settings.refresh": {
       "localizations": {
         "en": {
@@ -1405,6 +1713,50 @@
           "stringUnit": {
             "state": "translated",
             "value": "更新於"
+          }
+        }
+      }
+    },
+    "updates.github_help": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download the latest installation package from GitHub Releases."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通过 GitHub Releases 下载最新安装包。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "透過 GitHub Releases 下載最新安裝套件。"
+          }
+        }
+      }
+    },
+    "updates.title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Software updates"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "软件更新"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "軟體更新"
           }
         }
       }
